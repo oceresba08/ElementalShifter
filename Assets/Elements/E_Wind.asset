@@ -20,8 +20,8 @@ MonoBehaviour:
   defenseMultiplier: 0.95
   attackMultiplier: 0.9
   enemyLayerHealth: 28
-  skillName: Burn
-  ultimateName: Inferno
+  skillName: Air Cutter
+  ultimateName: Cyclone Valley
   description: 
   appearanceMaterial: {fileID: 2100000, guid: e45857c35603b5a4e9558bc18cc98f22, type: 2}
   visualPrefab: {fileID: 0}

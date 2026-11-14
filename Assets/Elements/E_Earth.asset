@@ -20,8 +20,8 @@ MonoBehaviour:
   defenseMultiplier: 1.2
   attackMultiplier: 1
   enemyLayerHealth: 65
-  skillName: Burn
-  ultimateName: Inferno
+  skillName: Stone Crash
+  ultimateName: "\tEarthquake"
   description: 
   appearanceMaterial: {fileID: 2100000, guid: e12521fd304a2e344a586892d10c1fc7, type: 2}
   visualPrefab: {fileID: 0}

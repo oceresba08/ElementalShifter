@@ -20,8 +20,8 @@ MonoBehaviour:
   defenseMultiplier: 1
   attackMultiplier: 1
   enemyLayerHealth: 40
-  skillName: Burn
-  ultimateName: Inferno
+  skillName: Renewal Pulse
+  ultimateName: Verdant Sanctuary
   description: 
   appearanceMaterial: {fileID: 2100000, guid: b3ac46cdf79f4a44abfb86d2f33f0c86, type: 2}
   visualPrefab: {fileID: 0}
