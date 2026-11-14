@@ -21,6 +21,6 @@ MonoBehaviour:
   skillName: Paper Cut
   ultimateName: Shred
   description: 
-  appearanceMaterial: {fileID: 2100000, guid: e12521fd304a2e344a586892d10c1fc7, type: 2}
+  appearanceMaterial: {fileID: 2100000, guid: 9915ec721373d554f80e06d0f831796e, type: 2}
   visualPrefab: {fileID: 0}
   loopingAuraPrefab: {fileID: 0}

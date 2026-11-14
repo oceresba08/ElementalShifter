@@ -21,6 +21,6 @@ MonoBehaviour:
   skillName: Paper Cut
   ultimateName: Evaporation
   description: 
-  appearanceMaterial: {fileID: 2100000, guid: 29f4b406bb03f544b8e0a982dd467d26, type: 2}
+  appearanceMaterial: {fileID: 2100000, guid: 24d46942d9c0f4541ba4ad910f014ac9, type: 2}
   visualPrefab: {fileID: 0}
   loopingAuraPrefab: {fileID: 0}

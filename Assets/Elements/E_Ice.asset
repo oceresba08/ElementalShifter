@@ -21,6 +21,6 @@ MonoBehaviour:
   skillName: Freeze
   ultimateName: Blizzard
   description: 
-  appearanceMaterial: {fileID: 2100000, guid: e45857c35603b5a4e9558bc18cc98f22, type: 2}
+  appearanceMaterial: {fileID: 2100000, guid: dfd904c70bb00fa4aa966882a1c1486a, type: 2}
   visualPrefab: {fileID: 0}
   loopingAuraPrefab: {fileID: 0}
