@@ -6,63 +6,94 @@ using UnityEngine.InputSystem;
 public class OrbitCombatCamera : MonoBehaviour
 {
     public Transform target;
-    [Range(2f, 12f)] public float distance = 5.5f;
-    public float focusHeight = 0.8f;
+    [Header("Close third-person framing")]
+    public float distance = 3.2f;
+    public float shoulderOffset = 0.65f;
+    public float focusHeight = 0.65f;
     public float mouseSensitivity = 0.12f;
-    public float smoothing = 12f;
-    public float pitch = 20f;
-    public float yaw = 0f;
-    private float cinematicOffset;
-    private Coroutine slamSequence;
+    public float smoothing = 14f;
+    public float pitch = 16f;
+    public float yaw;
+    [Header("Combat cinema")]
+    [Range(0, 1)] public float cameraIntensity = 0.8f;
+    public float baseFOV = 62f;
+    public float attackFOV = 72f;
+    public float impactShake = 0.20f;
+    public float collisionRadius = 0.22f;
+    public LayerMask collisionMask = ~0;
 
-    private void Start()
-    {
-        Cursor.lockState = CursorLockMode.Locked;
-        Cursor.visible = false;
-    }
+    Camera cam;
+    float cinematicRise;
+    float fovKick;
+    float shakeAmount;
+    float shakeTime;
+    Coroutine beat;
+
+    private void Awake() { cam = GetComponent<Camera>(); }
+    private void Start() { Cursor.lockState = CursorLockMode.Locked; Cursor.visible = false; }
 
     private void LateUpdate()
     {
         if (target == null) return;
         if (Cursor.lockState == CursorLockMode.Locked && Mouse.current != null)
         {
-            Vector2 movement = Mouse.current.delta.ReadValue();
-            yaw += movement.x * mouseSensitivity;
-            pitch = Mathf.Clamp(pitch - movement.y * mouseSensitivity, -15f, 65f);
+            Vector2 m = Mouse.current.delta.ReadValue();
+            yaw += m.x * mouseSensitivity;
+            pitch = Mathf.Clamp(pitch - m.y * mouseSensitivity, -20f, 65f);
         }
-
-        Quaternion rotation = Quaternion.Euler(pitch, yaw, 0);
+        Quaternion rot = Quaternion.Euler(pitch, yaw, 0);
         Vector3 focus = target.position + Vector3.up * focusHeight;
-        Vector3 destination = focus - rotation * Vector3.forward * distance +
-                              Vector3.up * cinematicOffset;
-        float lerp = 1f - Mathf.Exp(-smoothing * Time.unscaledDeltaTime);
-        transform.position = Vector3.Lerp(transform.position, destination, lerp);
-        transform.rotation = Quaternion.LookRotation(focus - transform.position, Vector3.up);
+        Vector3 side = rot * Vector3.right * shoulderOffset;
+        Vector3 desired = focus + side - rot * Vector3.forward * distance + Vector3.up * cinematicRise;
+        // Prevent walls from blocking the character; exclude player's layer in collisionMask.
+        Vector3 from = focus + side;
+        Vector3 ray = desired - from;
+        if (Physics.SphereCast(from, collisionRadius, ray.normalized, out RaycastHit wall,
+            ray.magnitude, collisionMask, QueryTriggerInteraction.Ignore))
+            desired = from + ray.normalized * Mathf.Max(0.35f, wall.distance - 0.08f);
+        float k = 1f - Mathf.Exp(-smoothing * Time.unscaledDeltaTime);
+        transform.position = Vector3.Lerp(transform.position, desired, k);
+        Vector3 look = focus + side * 0.28f - transform.position;
+        if (look.sqrMagnitude > 0.0001f) transform.rotation = Quaternion.LookRotation(look);
+        fovKick = Mathf.MoveTowards(fovKick, 0, Time.unscaledDeltaTime * 45f);
+        cam.fieldOfView = Mathf.Lerp(cam.fieldOfView, baseFOV + fovKick * cameraIntensity, k);
+        if (shakeTime > 0)
+        {
+            shakeTime -= Time.unscaledDeltaTime;
+            transform.position += Random.insideUnitSphere * shakeAmount * cameraIntensity;
+            shakeAmount = Mathf.MoveTowards(shakeAmount, 0f, Time.unscaledDeltaTime);
+        }
     }
 
+    public void AttackBeat(float magnitude = 0.5f)
+    {
+        fovKick = (attackFOV - baseFOV) * Mathf.Clamp01(magnitude);
+        Shake(impactShake * magnitude, 0.13f);
+    }
+    public void Shake(float amount, float duration)
+    {
+        shakeAmount = Mathf.Max(shakeAmount, amount);
+        shakeTime = Mathf.Max(shakeTime, duration);
+    }
     public void PlaySlamBeat()
     {
-        if (slamSequence != null) StopCoroutine(slamSequence);
-        slamSequence = StartCoroutine(SlamBeat());
+        if (beat != null) StopCoroutine(beat);
+        beat = StartCoroutine(SlamCamera());
     }
-
-    private IEnumerator SlamBeat()
+    IEnumerator SlamCamera()
     {
-        float duration = 0.65f;
-        float elapsed = 0f;
-        while (elapsed < duration)
+        AttackBeat(1f);
+        float duration = 0.62f;
+        for (float elapsed = 0; elapsed < duration; elapsed += Time.unscaledDeltaTime)
         {
-            elapsed += Time.unscaledDeltaTime;
-            float t = Mathf.Clamp01(elapsed / duration);
-            // Rise, then dive below the usual camera height, then reset.
-            cinematicOffset = t < 0.35f
-                ? Mathf.Lerp(0f, 1.8f, t / 0.35f)
-                : t < 0.75f
-                    ? Mathf.Lerp(1.8f, -0.45f, (t - 0.35f) / 0.40f)
-                    : Mathf.Lerp(-0.45f, 0f, (t - 0.75f) / 0.25f);
+            float t = elapsed / duration;
+            cinematicRise = cameraIntensity * (t < 0.45f
+                ? Mathf.Lerp(0, 2.15f, t / 0.45f)
+                : Mathf.Lerp(2.15f, -0.35f, (t - 0.45f) / 0.55f));
             yield return null;
         }
-        cinematicOffset = 0f;
-        slamSequence = null;
+        cinematicRise = 0;
+        Shake(impactShake * 2f, 0.23f);
+        beat = null;
     }
 }
