@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c8372e6145488a14eb44e8f8553a55b7, type: 3}
+  m_Name: E_Wind
+  m_EditorClassIdentifier: Assembly-CSharp::ElementData
+  id: 4
+  primaryFamily: 5
+  secondaryFamily: 0
+  speedMultiplier: 1.15
+  defenseMultiplier: 0.95
+  attackMultiplier: 0.9
+  skillName: Burn
+  ultimateName: Inferno
+  description: 
+  appearanceMaterial: {fileID: 2100000, guid: e45857c35603b5a4e9558bc18cc98f22, type: 2}
+  visualPrefab: {fileID: 0}
+  loopingAuraPrefab: {fileID: 0}

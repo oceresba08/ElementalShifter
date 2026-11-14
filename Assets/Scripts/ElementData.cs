@@ -3,7 +3,7 @@ using UnityEngine;
 public enum ElementFamily { None, Fire, Water, Nature, Earth, Wind, Lightning, Ice }
 public enum ElementId { Fire, Water, Nature, Earth, Wind, Paper, Mud, Steam, Bloom, Lightning, Ice }
 
-[CreateAssetMenu(menuName = "Elemental Rumble/Element", fileName = "NewElement")]
+[CreateAssetMenu(menuName = "Elemental Shift/Element", fileName = "NewElement")]
 public class ElementData : ScriptableObject
 {
     public ElementId id;

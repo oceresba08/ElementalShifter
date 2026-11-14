@@ -1,0 +1,36 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a29fb1f47858deb449a9f23628d102cb, type: 3}
+  m_Name: ElementDatabase_Main
+  m_EditorClassIdentifier: Assembly-CSharp::ElementDatabase
+  allElements:
+  - {fileID: 11400000, guid: 9a30e8de6427e3a4d9e6fe871d4d2ce8, type: 2}
+  - {fileID: 11400000, guid: 06e451374bc771d44bd9c574745b1127, type: 2}
+  - {fileID: 11400000, guid: af4277037fc210c46b077669c244ae83, type: 2}
+  - {fileID: 11400000, guid: 36505a14e64aae04b9b021c0400cfe53, type: 2}
+  - {fileID: 11400000, guid: e552d9148abf5cc4eb0216bfd062ed51, type: 2}
+  - {fileID: 11400000, guid: 9f59a4c563611664b9aeb03afa723d3a, type: 2}
+  - {fileID: 11400000, guid: 1a11fe7d5edef2f43b5359bc78a82ae2, type: 2}
+  - {fileID: 11400000, guid: de1a5f1929d7d2540a1d5433cc73106e, type: 2}
+  - {fileID: 11400000, guid: 5433ff3e4042bf44e9a67899d1fe0663, type: 2}
+  - {fileID: 11400000, guid: f0173f90dad52a84bbf9c0967e7e72a2, type: 2}
+  - {fileID: 11400000, guid: d9866fafb0334fc4cbd9a0e436ce92a1, type: 2}
+  recipes:
+  - ingredientA: {fileID: 11400000, guid: f0173f90dad52a84bbf9c0967e7e72a2, type: 2}
+    ingredientB: {fileID: 11400000, guid: 06e451374bc771d44bd9c574745b1127, type: 2}
+    result: {fileID: 11400000, guid: 9f59a4c563611664b9aeb03afa723d3a, type: 2}
+  - ingredientA: {fileID: 11400000, guid: f0173f90dad52a84bbf9c0967e7e72a2, type: 2}
+    ingredientB: {fileID: 11400000, guid: af4277037fc210c46b077669c244ae83, type: 2}
+    result: {fileID: 11400000, guid: 5433ff3e4042bf44e9a67899d1fe0663, type: 2}
+  - ingredientA: {fileID: 11400000, guid: 1a11fe7d5edef2f43b5359bc78a82ae2, type: 2}
+    ingredientB: {fileID: 11400000, guid: f0173f90dad52a84bbf9c0967e7e72a2, type: 2}
+    result: {fileID: 11400000, guid: 9a30e8de6427e3a4d9e6fe871d4d2ce8, type: 2}

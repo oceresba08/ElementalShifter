@@ -10,7 +10,7 @@ public class ElementRecipe
     public ElementData result;
 }
 
-[CreateAssetMenu(menuName = "Elemental Rumble/Element Database", fileName = "ElementDatabase")]
+[CreateAssetMenu(menuName = "Elemental Shift/Element Database", fileName = "ElementDatabase")]
 public class ElementDatabase : ScriptableObject
 {
     public ElementData[] allElements;
