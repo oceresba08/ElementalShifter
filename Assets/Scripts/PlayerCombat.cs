@@ -19,20 +19,75 @@ public class PlayerCombat : MonoBehaviour
     public float lungeDuration = .23f;
     public float collisionDamageRadius = 1.7f;
     public float hitKnockback = 5f;
+    [Header("C-curve Beyblade Spin (K)")]
+    public float spinRange = 8f;
+    public float spinDuration = 0.68f;
+    public float spinSideOffset = 2.8f;
+    public float spinExitDistance = 2.7f;
+    public float spinTurnSpeed = 24f;
+    public float spinHitRadius = 1.65f;
+    public TrailRenderer spinTrail;
+    [Header("Phase 3 elemental skills")]
+    public ElementProjectile windProjectilePrefab;
+    public float projectileSpeed = 18f;
+    public float earthWindupSeconds = 0.4f;
+    public GameObject windCastVFX, earthImpactVFX, naturePulseVFX;
+    [Header("Nature regeneration")]
+    public float natureHealPerSecond = 1.4f;
+    public float sanctuaryDuration = 6f;
+    public float sanctuaryHealPerSecond = 7f;
+    float nextNatureRegen;
     public float UltimateCharge { get; private set; }
     public event Action<string> AttackFeedback;
     Rigidbody rb;
     float nextHit, nextSpin, nextSlam, nextSkill;
+    [Header("Slam: jump, short apex slow motion, then impact")]
+    public float slamJumpVelocity = 10.5f;
+    public float slamFallVelocity = 17f;
+    public float apexSlowMotion = 0.42f;
+    public float apexHoldRealSeconds = 0.18f;
+    public float slamGroundCheckDistance = 0.8f;
+    public GameObject slamImpactVFX;
     bool busy;
+    float previousFixedStep;
+    bool ownsSlowMotion;
+    void OnDisable() { RestoreTime(); combatCamera?.EndSlamFollow(); if (spinTrail != null) spinTrail.emitting = false; }
+    void SetSlowMotion(float scale)
+    {
+        if (!ownsSlowMotion) { previousFixedStep = Time.fixedDeltaTime; ownsSlowMotion = true; }
+        Time.timeScale = Mathf.Clamp(scale, .05f, 1f);
+        Time.fixedDeltaTime = previousFixedStep * Time.timeScale;
+    }
+    void RestoreTime()
+    {
+        if (!ownsSlowMotion) return;
+        Time.timeScale = 1f;
+        Time.fixedDeltaTime = previousFixedStep;
+        ownsSlowMotion = false;
+    }
+    bool SlamGrounded()
+    {
+        Collider myCollider = GetComponent<Collider>();
+        float radius = myCollider is SphereCollider s ? s.radius * Mathf.Max(transform.lossyScale.x, transform.lossyScale.z) : 0.5f;
+        Vector3 origin = transform.position + Vector3.up * 0.1f;
+        foreach (RaycastHit h in Physics.SphereCastAll(origin, radius * .75f, Vector3.down, slamGroundCheckDistance, ~0, QueryTriggerInteraction.Ignore))
+            if (h.collider != myCollider && !h.transform.IsChildOf(transform)) return true;
+        return false;
+    }
     void Awake()
     { rb = GetComponent<Rigidbody>(); if (elements == null) elements = GetComponent<PlayerElements>(); }
     void Update()
     {
+        if (elements != null && elements.Current != null && elements.Current.combatClass == ElementClass.Healer && Time.time >= nextNatureRegen)
+        {
+            nextNatureRegen = Time.time + 1f;
+            GetComponent<PlayerDurability>()?.Heal(natureHealPerSecond);
+        }
         if (Keyboard.current == null || Time.timeScale == 0) return;
         if (Keyboard.current.jKey.wasPressedThisFrame && Time.time >= nextHit && !busy)
         { nextHit = Time.time + hitCooldown; StartCoroutine(LungeHit()); }
         if (Keyboard.current.kKey.wasPressedThisFrame && Time.time >= nextSpin && !busy)
-        { nextSpin = Time.time + spinCooldown; Strike(transform.position, 2.4f, spinDamage, false); combatCamera?.AttackBeat(.5f); AttackFeedback?.Invoke("SPIN!"); }
+        { nextSpin = Time.time + spinCooldown; StartCoroutine(CurvedSpin()); }
         if (Keyboard.current.lKey.wasPressedThisFrame && Time.time >= nextSlam && !busy)
         { nextSlam = Time.time + slamCooldown; StartCoroutine(Slam()); }
         if (Keyboard.current.qKey.wasPressedThisFrame && Time.time >= nextSkill && !busy && elements != null && elements.Current != null)
@@ -40,9 +95,7 @@ public class PlayerCombat : MonoBehaviour
         if (Keyboard.current.rKey.wasPressedThisFrame && UltimateCharge >= 100f && !busy && elements != null && elements.Current != null)
         {
             UltimateCharge = 0;
-            Strike(transform.position, 5f, ultimateDamage, true);
-            combatCamera?.AttackBeat(1f);
-            AttackFeedback?.Invoke(elements.Current.ultimateName.ToUpperInvariant());
+            StartCoroutine(UseUltimate());
         }
     }
     EnemyLayers NearestEnemy(float range)
@@ -89,56 +142,183 @@ public class PlayerCombat : MonoBehaviour
     {
         busy = true;
         AttackFeedback?.Invoke("SLAM!");
-        combatCamera?.PlaySlamBeat();
-        rb.AddForce(Vector3.up * 6.5f, ForceMode.VelocityChange);
-        yield return new WaitForSeconds(.28f);
-        rb.AddForce(Vector3.down * 13.5f, ForceMode.VelocityChange);
-        yield return new WaitForSeconds(.27f);
+        combatCamera?.BeginSlamFollow();
+        Vector3 v = rb.linearVelocity;
+        rb.linearVelocity = new Vector3(v.x * .5f, slamJumpVelocity, v.z * .5f);
+
+        // Let the ball rise naturally; no camera swoop or rotation.
+        float elapsed = 0f;
+        while (rb.linearVelocity.y > 1f && elapsed < 1.3f)
+        {
+            elapsed += Time.fixedDeltaTime;
+            yield return new WaitForFixedUpdate();
+        }
+
+        // Brief apex pause. Use real-time waiting so it stays short.
+        SetSlowMotion(apexSlowMotion);
+        yield return new WaitForSecondsRealtime(apexHoldRealSeconds);
+        RestoreTime();
+        rb.linearVelocity = new Vector3(rb.linearVelocity.x * .35f, -slamFallVelocity, rb.linearVelocity.z * .35f);
+
+        // Apply damage on contact instead of an arbitrary time after launch.
+        elapsed = 0f;
+        while (elapsed < 2f)
+        {
+            yield return new WaitForFixedUpdate();
+            elapsed += Time.fixedDeltaTime;
+            if (rb.linearVelocity.y <= 0.1f && SlamGrounded()) break;
+        }
         Strike(transform.position, 2.7f, slamDamage, false);
+        if (slamImpactVFX != null) Destroy(Instantiate(slamImpactVFX, transform.position + Vector3.down * .4f, Quaternion.identity), 3f);
+        combatCamera?.EndSlamFollow();
+        AttackFeedback?.Invoke("SMASH!");
         busy = false;
     }
+    // One smooth C-shaped attack with the enemy at the midpoint. Camera yaw is unchanged.
+    IEnumerator CurvedSpin()
+    {
+        busy = true;
+        EnemyLayers enemy = NearestEnemy(spinRange);
+        Vector3 start = rb.position;
+        Vector3 forward = FlatForward();
+        Vector3 right = Vector3.Cross(Vector3.up, forward).normalized;
+        // Start on one side, curve around, land the hit at the bend, then exit on the other side.
+        Vector3 aim = enemy != null ? enemy.transform.position : start + forward * 4f;
+        aim.y = start.y;
+        Vector3 impact = aim - forward * 0.95f;
+        Vector3 controlIn = Vector3.Lerp(start, impact, .5f) + right * spinSideOffset;
+        Vector3 exit = aim + forward * spinExitDistance + right * 1.2f;
+        Vector3 controlOut = Vector3.Lerp(impact, exit, .5f) + right * spinSideOffset;
+        bool struck = false;
+        Vector3 oldAngularVelocity = rb.angularVelocity;
+        if (spinTrail != null) { spinTrail.Clear(); spinTrail.emitting = true; }
+        AttackFeedback?.Invoke("CURVE SPIN!");
+        combatCamera?.AttackBeat(.35f);
+        float elapsed = 0f;
+        while (elapsed < spinDuration)
+        {
+            yield return new WaitForFixedUpdate();
+            elapsed += Time.fixedDeltaTime;
+            float t = Mathf.Clamp01(elapsed / Mathf.Max(.1f, spinDuration));
+            float u = t < .5f ? t * 2f : (t - .5f) * 2f;
+            Vector3 point = t < .5f ? Bezier(start, controlIn, impact, u) : Bezier(impact, controlOut, exit, u);
+            // Preserve vertical physics: spin follows the floor and doesn't teleport vertically.
+            point.y = rb.position.y;
+            rb.MovePosition(point);
+            rb.angularVelocity = Vector3.up * spinTurnSpeed;
+            if (!struck && t >= .46f)
+            {
+                struck = true;
+                if (Strike(impact + forward * .95f, spinHitRadius, spinDamage, false, forward))
+                    combatCamera?.Shake(.07f, .09f);
+            }
+        }
+        if (spinTrail != null) spinTrail.emitting = false;
+        rb.angularVelocity = oldAngularVelocity;
+        busy = false;
+    }
+    static Vector3 Bezier(Vector3 a, Vector3 b, Vector3 c, float t)
+    { float m = 1f - t; return m * m * a + 2f * m * t * b + t * t * c; }
+
     void UseSkill()
     {
         ElementData e = elements.Current;
-        // Class archetypes, not yet distinct per-element particle/animation prefabs.
         switch (e.combatClass)
         {
             case ElementClass.Ranger:
-                StartCoroutine(RangedSkill(e)); break;
-            case ElementClass.Healer:
-            case ElementClass.Support:
-                PlayerDurability h = GetComponent<PlayerDurability>();
-                if (h != null) h.Heal(20f);
-                Strike(transform.position, 2.5f, skillDamage * .35f, true);
+                FireProjectile(e, FlatForward(), skillDamage);
+                AttackFeedback?.Invoke("AIR CUTTER!");
                 break;
             case ElementClass.Heavy:
             case ElementClass.Tank:
-                Strike(transform.position, 3.5f, skillDamage * 1.2f, true); break;
+                StartCoroutine(EarthWindup(e, skillDamage * 1.2f, 3.5f));
+                AttackFeedback?.Invoke("STONE CRASH!");
+                break;
+            case ElementClass.Healer:
+            case ElementClass.Support:
+                GetComponent<PlayerDurability>()?.Heal(20f);
+                SpawnEffect(naturePulseVFX, transform.position);
+                Strike(transform.position, 2.6f, skillDamage * .35f, true);
+                AttackFeedback?.Invoke("RENEWAL PULSE!");
+                break;
             case ElementClass.Assassin:
             case ElementClass.Trickster:
-                StartCoroutine(LungeHit()); break;
+                StartCoroutine(LungeHit());
+                AttackFeedback?.Invoke(e.skillName.ToUpperInvariant());
+                break;
             default:
-                Strike(transform.position + FlatForward() * 1.8f, 3f, skillDamage, true); break;
+                Strike(transform.position + FlatForward() * 1.8f, 3f, skillDamage, true);
+                AttackFeedback?.Invoke(e.skillName.ToUpperInvariant());
+                break;
         }
-        combatCamera?.AttackBeat(.85f);
-        AttackFeedback?.Invoke(e.skillName.ToUpperInvariant());
+        combatCamera?.AttackBeat(.5f);
     }
-    IEnumerator RangedSkill(ElementData e)
+    IEnumerator UseUltimate()
     {
-        Vector3 origin = transform.position + Vector3.up * .5f;
-        Vector3 direction = FlatForward();
-        EnemyLayers target = NearestEnemy(14f);
-        if (target != null) { direction = target.transform.position - origin; direction.Normalize(); }
-        // A real visible projectile can be added later. For now, delayed ranged damage.
-        yield return new WaitForSeconds(.17f);
-        RaycastHit[] hits = Physics.SphereCastAll(origin, .65f, direction, 14f, ~0, QueryTriggerInteraction.Ignore);
-        Array.Sort(hits, (a, b) => a.distance.CompareTo(b.distance));
-        foreach (RaycastHit hit in hits)
+        ElementData e = elements.Current;
+        AttackFeedback?.Invoke(e.ultimateName.ToUpperInvariant());
+        if (e.combatClass == ElementClass.Ranger)
         {
-            EnemyLayers enemy = hit.collider.GetComponentInParent<EnemyLayers>();
-            if (enemy != null) { if (enemy.TakeHit(skillDamage, e, true)) UltimateCharge = Mathf.Min(100, UltimateCharge + 10); break; }
+            Vector3 direction = FlatForward();
+            for (int i = -2; i <= 2; i++)
+                FireProjectile(e, Quaternion.Euler(0, i * 11f, 0) * direction, ultimateDamage * .48f);
         }
+        else if (e.combatClass == ElementClass.Heavy || e.combatClass == ElementClass.Tank)
+        {
+            yield return EarthWindup(e, ultimateDamage, 5.5f);
+        }
+        else if (e.combatClass == ElementClass.Healer || e.combatClass == ElementClass.Support)
+        {
+            GetComponent<PlayerDurability>()?.Heal(30f);
+            SpawnEffect(naturePulseVFX, transform.position);
+            Strike(transform.position, 4f, ultimateDamage * .45f, true);
+            float time = 0f;
+            while (time < sanctuaryDuration)
+            {
+                yield return new WaitForSeconds(1f);
+                time += 1f;
+                GetComponent<PlayerDurability>()?.Heal(sanctuaryHealPerSecond);
+            }
+        }
+        else
+        {
+            Strike(transform.position, 5f, ultimateDamage, true);
+        }
+        combatCamera?.AttackBeat(.65f);
     }
+    IEnumerator EarthWindup(ElementData e, float damage, float radius)
+    {
+        busy = true;
+        yield return new WaitForSeconds(earthWindupSeconds);
+        SpawnEffect(earthImpactVFX, transform.position);
+        Strike(transform.position, radius, damage, true);
+        combatCamera?.Shake(.10f, .10f);
+        busy = false;
+    }
+    void FireProjectile(ElementData e, Vector3 direction, float damage)
+    {
+        SpawnEffect(windCastVFX, transform.position + Vector3.up * .3f);
+        Vector3 spawn = transform.position + Vector3.up * .4f + direction.normalized * .85f;
+        ElementProjectile projectile;
+        if (windProjectilePrefab != null)
+            projectile = Instantiate(windProjectilePrefab, spawn, Quaternion.LookRotation(direction));
+        else
+        {
+            GameObject sphere = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+            sphere.name = "AirCutter_Prototype";
+            sphere.transform.position = spawn;
+            sphere.transform.localScale = Vector3.one * .45f;
+            projectile = sphere.AddComponent<ElementProjectile>();
+        }
+        projectile.Initialize(this, e, direction, projectileSpeed, damage, 2.4f);
+    }
+    void SpawnEffect(GameObject effect, Vector3 pos)
+    {
+        if (effect == null) return;
+        Destroy(Instantiate(effect, pos, Quaternion.identity), 4f);
+    }
+    public void AddUltimateCharge(float value)
+    { UltimateCharge = Mathf.Clamp(UltimateCharge + value, 0f, 100f); }
     Vector3 FlatForward()
     {
         Vector3 v = combatCamera != null ? combatCamera.transform.forward : transform.forward;

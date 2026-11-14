@@ -12,6 +12,9 @@ public class PlayerElements : MonoBehaviour
 
     public ElementData Current { get; private set; }
     public bool MixingEnabled { get; private set; }
+    [Header("Transformation permissions")]
+    public bool shiftingEnabledAtStart = true;
+    public bool ShiftingEnabled { get; private set; }
     public event Action<ElementData> ElementChanged;
     public event Action<string> Feedback;
 
@@ -20,11 +23,17 @@ public class PlayerElements : MonoBehaviour
 
     private void Start()
     {
+        ShiftingEnabled = shiftingEnabledAtStart;
         if (startingElement != null) ApplyElement(startingElement);
     }
 
     private void Update()
     {
+        if (Keyboard.current != null && Keyboard.current.gKey.wasPressedThisFrame)
+        {
+            ShiftingEnabled = !ShiftingEnabled;
+            Feedback?.Invoke(ShiftingEnabled ? "SHIFTING: ON" : "SHIFTING: OFF");
+        }
         if (Keyboard.current != null && Keyboard.current.fKey.wasPressedThisFrame)
         {
             MixingEnabled = !MixingEnabled;
@@ -34,7 +43,7 @@ public class PlayerElements : MonoBehaviour
 
     public bool Absorb(ElementData incoming)
     {
-        if (incoming == null) return false;
+        if (incoming == null || !ShiftingEnabled) return false;
         if (Current == null || !MixingEnabled)
         {
             ApplyElement(incoming);

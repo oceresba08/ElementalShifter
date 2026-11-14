@@ -31,7 +31,7 @@ public class PrototypeHUD : MonoBehaviour
         if (elementLabel != null)
             elementLabel.text = "FORM: " + (player != null && player.Current != null ? player.Current.id.ToString() : "NEUTRAL");
         if (mixLabel != null)
-            mixLabel.text = "FUSION: " + (player != null && player.MixingEnabled ? "ON" : "OFF");
+            mixLabel.text = "SHIFT [G]: " + (player != null && player.ShiftingEnabled ? "ON" : "OFF") + "   FUSION [F]: " + (player != null && player.MixingEnabled ? "ON" : "OFF");
         if (weatherLabel != null)
             weatherLabel.text = "WEATHER: " + (WeatherManager.Instance != null ? WeatherManager.Instance.Current.ToString() : "CLEAR");
         if (chargeLabel != null)
