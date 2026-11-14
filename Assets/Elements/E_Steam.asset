@@ -15,9 +15,11 @@ MonoBehaviour:
   id: 7
   primaryFamily: 2
   secondaryFamily: 1
+  combatClass: 7
   speedMultiplier: 1.08
   defenseMultiplier: 0.92
   attackMultiplier: 1.05
+  enemyLayerHealth: 33
   skillName: Paper Cut
   ultimateName: Evaporation
   description: 

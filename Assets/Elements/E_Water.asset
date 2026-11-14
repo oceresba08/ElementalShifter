@@ -15,9 +15,11 @@ MonoBehaviour:
   id: 1
   primaryFamily: 2
   secondaryFamily: 0
+  combatClass: 1
   speedMultiplier: 1
   defenseMultiplier: 1.1
   attackMultiplier: 1
+  enemyLayerHealth: 36
   skillName: Water Pulse
   ultimateName: Tidal Wave
   description: 

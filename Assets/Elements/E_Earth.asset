@@ -15,9 +15,11 @@ MonoBehaviour:
   id: 3
   primaryFamily: 4
   secondaryFamily: 0
+  combatClass: 2
   speedMultiplier: 0.88
   defenseMultiplier: 1.2
   attackMultiplier: 1
+  enemyLayerHealth: 65
   skillName: Burn
   ultimateName: Inferno
   description: 

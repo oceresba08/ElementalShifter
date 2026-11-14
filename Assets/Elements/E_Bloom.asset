@@ -15,9 +15,11 @@ MonoBehaviour:
   id: 8
   primaryFamily: 3
   secondaryFamily: 2
+  combatClass: 8
   speedMultiplier: 1
   defenseMultiplier: 1.05
   attackMultiplier: 0.95
+  enemyLayerHealth: 45
   skillName: Garden
   ultimateName: Spring
   description: 

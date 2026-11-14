@@ -15,9 +15,11 @@ MonoBehaviour:
   id: 10
   primaryFamily: 7
   secondaryFamily: 0
+  combatClass: 10
   speedMultiplier: 0.93
   defenseMultiplier: 1.15
   attackMultiplier: 1
+  enemyLayerHealth: 50
   skillName: Freeze
   ultimateName: Blizzard
   description: 

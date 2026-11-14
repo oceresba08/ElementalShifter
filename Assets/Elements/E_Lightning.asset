@@ -15,9 +15,11 @@ MonoBehaviour:
   id: 9
   primaryFamily: 6
   secondaryFamily: 0
+  combatClass: 9
   speedMultiplier: 1.2
   defenseMultiplier: 0.85
   attackMultiplier: 1.1
+  enemyLayerHealth: 25
   skillName: Strike
   ultimateName: Zeus's Will
   description: 

@@ -15,9 +15,11 @@ MonoBehaviour:
   id: 6
   primaryFamily: 2
   secondaryFamily: 4
+  combatClass: 6
   speedMultiplier: 0.9
   defenseMultiplier: 1.18
   attackMultiplier: 1
+  enemyLayerHealth: 70
   skillName: Paper Cut
   ultimateName: Landslide
   description: 
