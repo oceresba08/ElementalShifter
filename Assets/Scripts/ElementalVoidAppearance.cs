@@ -1,118 +1,122 @@
+using System.Collections;
 using UnityEngine;
 
-/// <summary>
-/// Visual-only bridge for the existing EnemyLayers component.
-/// Keeps the permanent core untouched, tints a TRANSPARENT shell,
-/// and swaps hand-authored particle aura prefabs on elemental layer changes.
-/// </summary>
 [RequireComponent(typeof(EnemyLayers))]
 public class ElementalVoidAppearance : MonoBehaviour
 {
-    [Header("Assign the outer translucent sphere here")]
-    [SerializeField] private Renderer elementalShellRenderer;
-    [Range(0f, 1f)][SerializeField] private float shellOpacity = 0.28f;
+    [Header("Visuals")]
+    [SerializeField] Renderer elementalShellRenderer;
+    [Range(0f, 1f)][SerializeField] float shellOpacity = .28f;
+    [SerializeField] Transform effectsAnchor;
+    [SerializeField] GameObject persistentVoidAuraPrefab;
+    [SerializeField] GameObject defeatBurstPrefab;
+    [Min(.1f)][SerializeField] float burstLifetime = 3f;
 
-    [Header("Particle mount (child Empty at 0,0,0)")]
-    [SerializeField] private Transform effectsAnchor;
-    [SerializeField] private GameObject persistentVoidAuraPrefab;
-    [SerializeField] private GameObject defeatBurstPrefab;
+    [Header("Absorption flashes")]
+    [SerializeField] float flashSeconds = .5f;
+    [SerializeField] int flashes = 2;
 
-    [Header("One-shot effect lifetime")]
-    [Min(0.1f)][SerializeField] private float burstLifetime = 3f;
+    EnemyLayers enemy;
+    ElementalVoidSiphon siphon;
+    GameObject elementalAura;
+    GameObject voidAura;
+    ElementData previousElement;
+    int previousLayerCount = -1;
+    MaterialPropertyBlock properties;
+    Color baseColor = Color.white;
+    Coroutine flashRoutine;
 
-    private EnemyLayers enemy;
-    private GameObject elementalAuraInstance;
-    private GameObject voidAuraInstance;
-    private ElementData previousElement;
-    private int previousLayerCount = -1;
-    private MaterialPropertyBlock shellProperties;
-
-    private void Awake()
+    void Awake()
     {
         enemy = GetComponent<EnemyLayers>();
-        shellProperties = new MaterialPropertyBlock();
+        siphon = GetComponent<ElementalVoidSiphon>();
+        properties = new MaterialPropertyBlock();
     }
-
-    private void OnEnable()
+    void OnEnable()
     {
-        if (enemy == null) enemy = GetComponent<EnemyLayers>();
         enemy.LayerChanged += OnLayerChanged;
         enemy.Defeated += OnDefeated;
+        if (siphon != null) siphon.ChargeStolen += FlashAbsorption;
     }
-
-    private void Start()
+    void Start()
     {
-        // EnemyLayers.Start initializes random elements; this is safe regardless
-        // of Start method ordering because LayerChanged also refreshes visuals.
-        if (enemy.CurrentLayer != null && previousLayerCount < 0)
-            RefreshElement();
-
-        if (persistentVoidAuraPrefab != null && voidAuraInstance == null)
-            voidAuraInstance = Instantiate(persistentVoidAuraPrefab, Anchor());
+        if (enemy.CurrentLayer != null) RefreshElement();
+        if (persistentVoidAuraPrefab != null && voidAura == null)
+            voidAura = Instantiate(persistentVoidAuraPrefab, effectsAnchor != null ? effectsAnchor : transform);
     }
-
-    private Transform Anchor() => effectsAnchor != null ? effectsAnchor : transform;
-
-    private void OnLayerChanged(EnemyLayers source)
+    void OnLayerChanged(EnemyLayers source)
     {
         if (source == null || source.CurrentLayer == null) return;
-        // LayerChanged also fires when health changes. Rebuild only when a
-        // layer was actually removed, or the current element changed.
         if (previousLayerCount >= 0 && source.RemainingLayers < previousLayerCount)
             SpawnBurst(previousElement != null ? previousElement.transformationBurstPrefab : null);
-
         if (previousLayerCount != source.RemainingLayers || previousElement != source.CurrentLayer)
             RefreshElement();
     }
-
-    private void RefreshElement()
+    void RefreshElement()
     {
         ElementData element = enemy.CurrentLayer;
         if (element == null) return;
         previousElement = element;
         previousLayerCount = enemy.RemainingLayers;
-
-        if (elementalAuraInstance != null)
-            Destroy(elementalAuraInstance);
-        elementalAuraInstance = null;
-
-        if (element.loopingAuraPrefab != null)
-            elementalAuraInstance = Instantiate(element.loopingAuraPrefab, Anchor());
-
-        if (elementalShellRenderer != null)
-        {
-            Color tint = Color.white;
-            if (element.appearanceMaterial != null)
-            {
-                Material m = element.appearanceMaterial;
-                if (m.HasProperty("_BaseColor")) tint = m.GetColor("_BaseColor");
-                else if (m.HasProperty("_Color")) tint = m.GetColor("_Color");
-            }
-            tint.a = shellOpacity;
-            elementalShellRenderer.GetPropertyBlock(shellProperties);
-            shellProperties.SetColor("_BaseColor", tint);
-            shellProperties.SetColor("_Color", tint);
-            elementalShellRenderer.SetPropertyBlock(shellProperties);
-        }
+        if (elementalAura != null) Destroy(elementalAura);
+        elementalAura = element.loopingAuraPrefab != null
+            ? Instantiate(element.loopingAuraPrefab, effectsAnchor != null ? effectsAnchor : transform) : null;
+        baseColor = ElementTint(element);
+        if (flashRoutine != null) { StopCoroutine(flashRoutine); flashRoutine = null; }
+        SetShell(baseColor);
     }
-
-    private void OnDefeated(EnemyLayers source)
+    static Color ElementTint(ElementData element)
+    {
+        if (element != null && element.appearanceMaterial != null)
+        {
+            Material m = element.appearanceMaterial;
+            if (m.HasProperty("_BaseColor")) return m.GetColor("_BaseColor");
+            if (m.HasProperty("_Color")) return m.GetColor("_Color");
+        }
+        return Color.white;
+    }
+    void SetShell(Color color)
+    {
+        if (elementalShellRenderer == null) return;
+        color.a = shellOpacity;
+        elementalShellRenderer.GetPropertyBlock(properties);
+        properties.SetColor("_BaseColor", color);
+        properties.SetColor("_Color", color);
+        elementalShellRenderer.SetPropertyBlock(properties);
+    }
+    void FlashAbsorption(ElementData stolen)
+    {
+        if (flashRoutine != null) StopCoroutine(flashRoutine);
+        flashRoutine = StartCoroutine(Flash(stolen));
+    }
+    IEnumerator Flash(ElementData stolen)
+    {
+        Color stolenColor = ElementTint(stolen);
+        float half = Mathf.Max(.03f, flashSeconds / (Mathf.Max(1, flashes) * 2));
+        for (int i = 0; i < Mathf.Max(1, flashes); i++)
+        {
+            float t = 0;
+            while (t < half) { t += Time.deltaTime; SetShell(Color.Lerp(baseColor, stolenColor, Mathf.Clamp01(t / half))); yield return null; }
+            t = 0;
+            while (t < half) { t += Time.deltaTime; SetShell(Color.Lerp(stolenColor, baseColor, Mathf.Clamp01(t / half))); yield return null; }
+        }
+        SetShell(baseColor);
+        flashRoutine = null;
+    }
+    void OnDefeated(EnemyLayers source)
     {
         SpawnBurst(previousElement != null ? previousElement.transformationBurstPrefab : null);
         SpawnBurst(defeatBurstPrefab);
     }
-
-    private void SpawnBurst(GameObject prefab)
+    void SpawnBurst(GameObject prefab)
     {
         if (prefab == null) return;
-        GameObject spawned = Instantiate(prefab, transform.position, Quaternion.identity);
-        Destroy(spawned, burstLifetime);
+        GameObject effect = Instantiate(prefab, transform.position, Quaternion.identity);
+        Destroy(effect, burstLifetime);
     }
-
-    private void OnDisable()
+    void OnDisable()
     {
-        if (enemy == null) return;
-        enemy.LayerChanged -= OnLayerChanged;
-        enemy.Defeated -= OnDefeated;
+        if (enemy != null) { enemy.LayerChanged -= OnLayerChanged; enemy.Defeated -= OnDefeated; }
+        if (siphon != null) siphon.ChargeStolen -= FlashAbsorption;
     }
 }
