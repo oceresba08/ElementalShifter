@@ -947,7 +947,7 @@ ParticleSystem:
     donutRadius: 0.2
     m_Position: {x: 0, y: 0, z: 0}
     m_Rotation: {x: 0, y: 0, z: 0}
-    m_Scale: {x: 20, y: 0.1, z: 20}
+    m_Scale: {x: 60, y: 0.1, z: 60}
     placementMode: 0
     m_MeshMaterialIndex: 0
     m_MeshNormalOffset: 0
@@ -2915,7 +2915,7 @@ Transform:
   m_GameObject: {fileID: 128820618}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: 0, y: -0.7, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -3280,7 +3280,7 @@ ParticleSystem:
     donutRadius: 0.2
     m_Position: {x: 0, y: 0, z: 0}
     m_Rotation: {x: 0, y: 0, z: 0}
-    m_Scale: {x: 16, y: 1, z: 16}
+    m_Scale: {x: 60, y: 1, z: 60}
     placementMode: 0
     m_MeshMaterialIndex: 0
     m_MeshNormalOffset: 0
@@ -5609,7 +5609,7 @@ ParticleSystem:
     donutRadius: 0.2
     m_Position: {x: 0, y: 0, z: 0}
     m_Rotation: {x: 0, y: 0, z: 0}
-    m_Scale: {x: 20, y: 0.1, z: 20}
+    m_Scale: {x: 60, y: 0.1, z: 60}
     placementMode: 0
     m_MeshMaterialIndex: 0
     m_MeshNormalOffset: 0
@@ -7728,7 +7728,7 @@ Transform:
   m_GameObject: {fileID: 191580937}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: -0.7, z: 0}
+  m_LocalPosition: {x: 0, y: -5.5, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -8093,7 +8093,7 @@ ParticleSystem:
     donutRadius: 0.2
     m_Position: {x: 0, y: 0, z: 0}
     m_Rotation: {x: 0, y: 0, z: 0}
-    m_Scale: {x: 16, y: 1, z: 16}
+    m_Scale: {x: 60, y: 1, z: 60}
     placementMode: 0
     m_MeshMaterialIndex: 0
     m_MeshNormalOffset: 0
@@ -13521,7 +13521,7 @@ Transform:
   m_GameObject: {fileID: 732763774}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: -0.7, z: 0}
+  m_LocalPosition: {x: 0, y: -5.6, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -13886,7 +13886,7 @@ ParticleSystem:
     donutRadius: 0.2
     m_Position: {x: 0, y: 0, z: 0}
     m_Rotation: {x: 0, y: 0, z: 0}
-    m_Scale: {x: 16, y: 1, z: 16}
+    m_Scale: {x: 60, y: 1, z: 60}
     placementMode: 0
     m_MeshMaterialIndex: 0
     m_MeshNormalOffset: 0
@@ -15975,7 +15975,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::WeatherSkyboxController
   clearSky: {fileID: 2100000, guid: 7f26a36a80ff35f47acdcef858aab62f, type: 2}
   rainSky: {fileID: 2100000, guid: 4538e3e656f7a8447948f158e13035f2, type: 2}
-  snowSky: {fileID: 2100000, guid: 0e51b3d2f16325549987d8d6070de3a1, type: 2}
+  snowSky: {fileID: 2100000, guid: 8f0bb1ad0e2f8674893d2052353860a1, type: 2}
   stormSky: {fileID: 2100000, guid: 389124aade13dd4419a380af381dbacf, type: 2}
   directionalLight: {fileID: 953187376}
   clearLightIntensity: 1.2
@@ -20339,7 +20339,7 @@ Light:
   m_Type: 2
   m_Color: {r: 0.53755784, g: 0.7202821, b: 0.754717, a: 1}
   m_Intensity: 0
-  m_Range: 15.2
+  m_Range: 25.6
   m_SpotAngle: 30
   m_InnerSpotAngle: 21.80208
   m_CookieSize2D: {x: 0.5, y: 0.5}
@@ -24428,7 +24428,7 @@ ParticleSystem:
     donutRadius: 0.2
     m_Position: {x: 0, y: 0, z: 0}
     m_Rotation: {x: 0, y: 0, z: 0}
-    m_Scale: {x: 20, y: 0.1, z: 20}
+    m_Scale: {x: 60, y: 0.1, z: 60}
     placementMode: 0
     m_MeshMaterialIndex: 0
     m_MeshNormalOffset: 0
@@ -27012,7 +27012,7 @@ Transform:
   m_GameObject: {fileID: 1949420043}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: 0, y: -2.6, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -27377,7 +27377,7 @@ ParticleSystem:
     donutRadius: 0.2
     m_Position: {x: 0, y: 0, z: 0}
     m_Rotation: {x: 0, y: 0, z: 0}
-    m_Scale: {x: 16, y: 1, z: 16}
+    m_Scale: {x: 60, y: 1, z: 60}
     placementMode: 0
     m_MeshMaterialIndex: 0
     m_MeshNormalOffset: 0
