@@ -1,3 +1,4 @@
+
 using UnityEngine;
 using UnityEngine.AI;
 
@@ -10,16 +11,31 @@ public class EnemyPatrol : MonoBehaviour
     public float detectionDistance = 7f;
     public float returnDistance = 11f;
     public float patrolArrivalDistance = 1f;
-    [Header("Resource hunting")]
+
+    [Header("Resource Hunting")]
     public bool seekResources = true;
     public float sourceStopDistance = 2.2f;
 
-    NavMeshAgent agent;
-    EnemyChargeAttack attack;
-    ElementalVoidSiphon siphon;
-    int nextPoint;
-    bool chasing;
-    bool warned;
+    [Header("Activity Timing")]
+    public float patrolSeconds = 8f;
+    public float seekSeconds = 20f;
+
+    private enum Activity
+    {
+        Patrol,
+        Seek,
+        Chase
+    }
+
+    private Activity activity = Activity.Patrol;
+    private Activity previousActivity = Activity.Patrol;
+
+    private NavMeshAgent agent;
+    private EnemyChargeAttack attack;
+    private ElementalVoidSiphon siphon;
+
+    private int nextPoint;
+    private float activityEndTime;
 
     void Awake()
     {
@@ -28,50 +44,172 @@ public class EnemyPatrol : MonoBehaviour
         siphon = GetComponent<ElementalVoidSiphon>();
     }
 
+    void Start()
+    {
+        activityEndTime = Time.time + patrolSeconds;
+
+        if (siphon != null)
+        {
+            siphon.SetSeeking(false);
+            siphon.ChargeStolen += OnChargeStolen;
+        }
+    }
+
+    void OnDestroy()
+    {
+        if (siphon != null)
+            siphon.ChargeStolen -= OnChargeStolen;
+    }
+
+    void OnChargeStolen(ElementData element)
+    {
+        // One successful absorption ends this search trip.
+        ChangeActivity(Activity.Patrol);
+    }
+
+    void ChangeActivity(Activity next)
+    {
+        activity = next;
+
+        if (activity == Activity.Patrol)
+            activityEndTime = Time.time + patrolSeconds;
+        else if (activity == Activity.Seek)
+            activityEndTime = Time.time + seekSeconds;
+
+        if (siphon != null)
+            siphon.SetSeeking(activity == Activity.Seek);
+    }
+
     void Update()
     {
-        if (!agent.isOnNavMesh)
-        {
-            if (!warned) { Debug.LogWarning("Void is not on a baked NavMesh. Bake the floor and place the enemy on it.", this); warned = true; }
+        if (!agent.enabled || !agent.isOnNavMesh)
             return;
-        }
+
         if (player == null)
         {
-            PlayerElements found = FindFirstObjectByType<PlayerElements>();
-            if (found != null) player = found.transform;
-        }
-        if (attack != null && attack.IsCharging) return;
+            PlayerElements found =
+                FindFirstObjectByType<PlayerElements>();
 
+            if (found != null)
+                player = found.transform;
+        }
+
+        if (attack != null && attack.IsCharging)
+            return;
+
+        // Player detection overrides other activities.
         if (player != null)
         {
-            float distance = Vector3.Distance(transform.position, player.position);
-            if (!chasing && distance <= detectionDistance) chasing = true;
-            else if (chasing && distance > returnDistance) chasing = false;
+            float distance = Vector3.Distance(
+                transform.position, player.position);
+
+            if (activity != Activity.Chase &&
+                distance <= detectionDistance)
+            {
+                previousActivity = activity;
+                ChangeActivity(Activity.Chase);
+            }
+            else if (activity == Activity.Chase &&
+                     distance > returnDistance)
+            {
+                // Resume patrol after the player escapes.
+                ChangeActivity(Activity.Patrol);
+            }
         }
-        if (chasing && player != null)
+
+        if (activity == Activity.Chase)
         {
-            agent.isStopped = false;
-            agent.stoppingDistance = 1.7f;
-            agent.SetDestination(player.position);
+            ChasePlayer();
             return;
         }
 
-        // The Siphon exposes a target even when it is out of drain range.
-        if (seekResources && siphon != null && siphon.CanSeekResource && siphon.TargetSource != null)
+        // Alternate between patrol and source searching.
+        if (Time.time >= activityEndTime)
         {
-            agent.isStopped = false;
-            agent.stoppingDistance = Mathf.Max(0.5f, sourceStopDistance);
-            agent.SetDestination(siphon.TargetSource.transform.position);
-            return;
+            if (activity == Activity.Patrol &&
+                seekResources &&
+                siphon != null &&
+                siphon.CanSeekResource)
+            {
+                ChangeActivity(Activity.Seek);
+            }
+            else
+            {
+                ChangeActivity(Activity.Patrol);
+            }
         }
 
-        agent.stoppingDistance = 0f;
-        if (patrolPoints == null || patrolPoints.Length == 0) { agent.ResetPath(); return; }
-        Transform point = patrolPoints[nextPoint];
-        if (point == null) { nextPoint = (nextPoint + 1) % patrolPoints.Length; return; }
+        if (activity == Activity.Seek)
+        {
+            SeekElementSource();
+        }
+        else
+        {
+            FollowPatrolPoints();
+        }
+    }
+
+    void ChasePlayer()
+    {
+        if (player == null)
+            return;
+
         agent.isStopped = false;
+        agent.stoppingDistance = 1.7f;
+        agent.SetDestination(player.position);
+    }
+
+    void SeekElementSource()
+    {
+        if (siphon == null || !siphon.CanSeekResource)
+        {
+            ChangeActivity(Activity.Patrol);
+            return;
+        }
+
+        ElementSource target = siphon.TargetSource;
+
+        if (target == null)
+        {
+            // Give the siphon time to find a source.
+            agent.isStopped = true;
+            agent.ResetPath();
+            return;
+        }
+
+        agent.isStopped = false;
+        agent.stoppingDistance =
+            Mathf.Max(0.5f, sourceStopDistance);
+
+        agent.SetDestination(target.transform.position);
+    }
+
+    void FollowPatrolPoints()
+    {
+        if (patrolPoints == null ||
+            patrolPoints.Length == 0)
+            return;
+
+        Transform point = patrolPoints[nextPoint];
+
+        if (point == null)
+        {
+            nextPoint =
+                (nextPoint + 1) % patrolPoints.Length;
+            return;
+        }
+
+        agent.isStopped = false;
+        agent.stoppingDistance = 0;
+
         agent.SetDestination(point.position);
-        if (!agent.pathPending && agent.remainingDistance <= Mathf.Max(0.2f, patrolArrivalDistance))
-            nextPoint = (nextPoint + 1) % patrolPoints.Length;
+
+        if (!agent.pathPending &&
+            agent.remainingDistance <=
+            patrolArrivalDistance)
+        {
+            nextPoint =
+                (nextPoint + 1) % patrolPoints.Length;
+        }
     }
 }

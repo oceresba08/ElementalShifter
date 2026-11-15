@@ -1,3 +1,4 @@
+
 using System.Collections;
 using UnityEngine;
 
@@ -5,118 +6,314 @@ using UnityEngine;
 public class ElementalVoidAppearance : MonoBehaviour
 {
     [Header("Visuals")]
-    [SerializeField] Renderer elementalShellRenderer;
-    [Range(0f, 1f)][SerializeField] float shellOpacity = .28f;
-    [SerializeField] Transform effectsAnchor;
-    [SerializeField] GameObject persistentVoidAuraPrefab;
-    [SerializeField] GameObject defeatBurstPrefab;
-    [Min(.1f)][SerializeField] float burstLifetime = 3f;
+    [SerializeField] private Renderer elementalShellRenderer;
 
-    [Header("Absorption flashes")]
-    [SerializeField] float flashSeconds = .5f;
-    [SerializeField] int flashes = 2;
+    [Range(0f, 1f)]
+    [SerializeField] private float shellOpacity = 0.5f;
 
-    EnemyLayers enemy;
-    ElementalVoidSiphon siphon;
-    GameObject elementalAura;
-    GameObject voidAura;
-    ElementData previousElement;
-    int previousLayerCount = -1;
-    MaterialPropertyBlock properties;
-    Color baseColor = Color.white;
-    Coroutine flashRoutine;
+    [SerializeField] private Transform effectsAnchor;
+    [SerializeField] private GameObject persistentVoidAuraPrefab;
+    [SerializeField] private GameObject defeatBurstPrefab;
 
-    void Awake()
+    [Min(0.1f)]
+    [SerializeField] private float burstLifetime = 3f;
+
+    [Header("Absorption Flashes")]
+    [SerializeField] private float flashSeconds = 0.6f;
+
+    [Min(1)]
+    [SerializeField] private int flashes = 2;
+
+    private EnemyLayers enemy;
+    private ElementalVoidSiphon siphon;
+
+    private MaterialPropertyBlock properties;
+
+    private GameObject elementalAura;
+    private GameObject voidAura;
+
+    private ElementData displayedElement;
+    private int displayedLayerCount = -1;
+
+    private Color permanentColor = Color.white;
+
+    private ElementData absorbingElement;
+    private float absorptionProgress;
+    private bool isAbsorbing;
+
+    private void Awake()
     {
         enemy = GetComponent<EnemyLayers>();
         siphon = GetComponent<ElementalVoidSiphon>();
+
         properties = new MaterialPropertyBlock();
-    }
-    void OnEnable()
-    {
-        enemy.LayerChanged += OnLayerChanged;
-        enemy.Defeated += OnDefeated;
-        if (siphon != null) siphon.ChargeStolen += FlashAbsorption;
-    }
-    void Start()
-    {
-        if (enemy.CurrentLayer != null) RefreshElement();
-        if (persistentVoidAuraPrefab != null && voidAura == null)
-            voidAura = Instantiate(persistentVoidAuraPrefab, effectsAnchor != null ? effectsAnchor : transform);
-    }
-    void OnLayerChanged(EnemyLayers source)
-    {
-        if (source == null || source.CurrentLayer == null) return;
-        if (previousLayerCount >= 0 && source.RemainingLayers < previousLayerCount)
-            SpawnBurst(previousElement != null ? previousElement.transformationBurstPrefab : null);
-        if (previousLayerCount != source.RemainingLayers || previousElement != source.CurrentLayer)
-            RefreshElement();
-    }
-    void RefreshElement()
-    {
-        ElementData element = enemy.CurrentLayer;
-        if (element == null) return;
-        previousElement = element;
-        previousLayerCount = enemy.RemainingLayers;
-        if (elementalAura != null) Destroy(elementalAura);
-        elementalAura = element.loopingAuraPrefab != null
-            ? Instantiate(element.loopingAuraPrefab, effectsAnchor != null ? effectsAnchor : transform) : null;
-        baseColor = ElementTint(element);
-        if (flashRoutine != null) { StopCoroutine(flashRoutine); flashRoutine = null; }
-        SetShell(baseColor);
-    }
-    static Color ElementTint(ElementData element)
-    {
-        if (element != null && element.appearanceMaterial != null)
+
+        if (elementalShellRenderer == null)
         {
-            Material m = element.appearanceMaterial;
-            if (m.HasProperty("_BaseColor")) return m.GetColor("_BaseColor");
-            if (m.HasProperty("_Color")) return m.GetColor("_Color");
+            Debug.LogWarning(
+                "ElementalShell renderer is not assigned!",
+                this
+            );
         }
-        return Color.white;
     }
-    void SetShell(Color color)
+
+    private void OnEnable()
     {
-        if (elementalShellRenderer == null) return;
+        if (enemy != null)
+        {
+            enemy.LayerChanged += OnLayerChanged;
+            enemy.Defeated += OnDefeated;
+        }
+
+        if (siphon != null)
+        {
+            siphon.AbsorptionPulse += OnAbsorptionPulse;
+        }
+    }
+
+    private void Start()
+    {
+        RefreshElement();
+
+        if (persistentVoidAuraPrefab != null &&
+            voidAura == null)
+        {
+            Transform anchor =
+                effectsAnchor != null
+                ? effectsAnchor
+                : transform;
+
+            voidAura = Instantiate(
+                persistentVoidAuraPrefab,
+                anchor
+            );
+
+            voidAura.transform.localPosition = Vector3.zero;
+        }
+    }
+
+    private void LateUpdate()
+    {
+        if (enemy == null ||
+            enemy.CurrentLayer == null)
+            return;
+
+        // Normally display the current outer layer.
+        if (!isAbsorbing || absorbingElement == null)
+        {
+            SetShellColor(permanentColor);
+            return;
+        }
+
+        // Blend between the current and target colors
+        // repeatedly WHILE an element is being absorbed.
+        float frequency =
+            Mathf.Max(1, flashes) /
+            Mathf.Max(0.1f, flashSeconds);
+
+        float oscillation = 0.5f + 0.5f *
+            Mathf.Sin(Time.time * frequency *
+                      Mathf.PI * 2f);
+
+        // Make the target color increasingly prominent
+        // as the enemy approaches a complete charge.
+        float strength = Mathf.Lerp(
+            0.45f,
+            0.95f,
+            absorptionProgress
+        );
+
+        float blend = oscillation * strength;
+
+        Color targetColor =
+            GetElementColor(absorbingElement);
+
+        Color result = Color.Lerp(
+            permanentColor,
+            targetColor,
+            blend
+        );
+
+        SetShellColor(result);
+    }
+
+    private void OnAbsorptionPulse(
+        ElementData targetElement,
+        float progress)
+    {
+        if (targetElement == null)
+        {
+            isAbsorbing = false;
+            absorbingElement = null;
+            absorptionProgress = 0f;
+
+            SetShellColor(permanentColor);
+            return;
+        }
+
+        absorbingElement = targetElement;
+        absorptionProgress = Mathf.Clamp01(progress);
+        isAbsorbing = true;
+    }
+
+    private void OnLayerChanged(EnemyLayers source)
+    {
+        if (source == null ||
+            source.CurrentLayer == null)
+            return;
+
+        bool layerWasRemoved =
+            displayedLayerCount >= 0 &&
+            source.RemainingLayers < displayedLayerCount;
+
+        bool elementChanged =
+            displayedElement != source.CurrentLayer;
+
+        bool layerCountChanged =
+            displayedLayerCount != source.RemainingLayers;
+
+        if (layerWasRemoved && displayedElement != null)
+        {
+            SpawnBurst(
+                displayedElement.transformationBurstPrefab
+            );
+        }
+
+        if (elementChanged || layerCountChanged)
+        {
+            RefreshElement();
+        }
+    }
+
+    private void RefreshElement()
+    {
+        if (enemy == null ||
+            enemy.CurrentLayer == null)
+            return;
+
+        ElementData current = enemy.CurrentLayer;
+
+        displayedElement = current;
+        displayedLayerCount = enemy.RemainingLayers;
+
+        permanentColor = GetElementColor(current);
+
+        isAbsorbing = false;
+        absorbingElement = null;
+        absorptionProgress = 0f;
+
+        SetShellColor(permanentColor);
+
+        // Remove the previous elemental aura.
+        if (elementalAura != null)
+        {
+            Destroy(elementalAura);
+            elementalAura = null;
+        }
+
+        // Spawn the new outer layer's handmade aura.
+        if (current.loopingAuraPrefab != null)
+        {
+            Transform anchor =
+                effectsAnchor != null
+                ? effectsAnchor
+                : transform;
+
+            elementalAura = Instantiate(
+                current.loopingAuraPrefab,
+                anchor
+            );
+
+            elementalAura.transform.localPosition =
+                Vector3.zero;
+        }
+    }
+
+    private static Color GetElementColor(
+        ElementData element)
+    {
+        if (element == null ||
+            element.appearanceMaterial == null)
+        {
+            return Color.gray;
+        }
+
+        Material material = element.appearanceMaterial;
+
+        if (material.HasProperty("_BaseColor"))
+        {
+            return material.GetColor("_BaseColor");
+        }
+
+        if (material.HasProperty("_Color"))
+        {
+            return material.GetColor("_Color");
+        }
+
+        return Color.gray;
+    }
+
+    private void SetShellColor(Color color)
+    {
+        if (elementalShellRenderer == null)
+            return;
+
         color.a = shellOpacity;
+
         elementalShellRenderer.GetPropertyBlock(properties);
+
         properties.SetColor("_BaseColor", color);
         properties.SetColor("_Color", color);
-        elementalShellRenderer.SetPropertyBlock(properties);
+
+        elementalShellRenderer.SetPropertyBlock(
+            properties
+        );
     }
-    void FlashAbsorption(ElementData stolen)
+
+    private void OnDefeated(EnemyLayers source)
     {
-        if (flashRoutine != null) StopCoroutine(flashRoutine);
-        flashRoutine = StartCoroutine(Flash(stolen));
-    }
-    IEnumerator Flash(ElementData stolen)
-    {
-        Color stolenColor = ElementTint(stolen);
-        float half = Mathf.Max(.03f, flashSeconds / (Mathf.Max(1, flashes) * 2));
-        for (int i = 0; i < Mathf.Max(1, flashes); i++)
+        isAbsorbing = false;
+
+        if (displayedElement != null)
         {
-            float t = 0;
-            while (t < half) { t += Time.deltaTime; SetShell(Color.Lerp(baseColor, stolenColor, Mathf.Clamp01(t / half))); yield return null; }
-            t = 0;
-            while (t < half) { t += Time.deltaTime; SetShell(Color.Lerp(stolenColor, baseColor, Mathf.Clamp01(t / half))); yield return null; }
+            SpawnBurst(
+                displayedElement.transformationBurstPrefab
+            );
         }
-        SetShell(baseColor);
-        flashRoutine = null;
-    }
-    void OnDefeated(EnemyLayers source)
-    {
-        SpawnBurst(previousElement != null ? previousElement.transformationBurstPrefab : null);
+
         SpawnBurst(defeatBurstPrefab);
     }
-    void SpawnBurst(GameObject prefab)
+
+    private void SpawnBurst(GameObject prefab)
     {
-        if (prefab == null) return;
-        GameObject effect = Instantiate(prefab, transform.position, Quaternion.identity);
+        if (prefab == null)
+            return;
+
+        Vector3 position =
+            effectsAnchor != null
+            ? effectsAnchor.position
+            : transform.position;
+
+        GameObject effect = Instantiate(
+            prefab,
+            position,
+            Quaternion.identity
+        );
+
         Destroy(effect, burstLifetime);
     }
-    void OnDisable()
+
+    private void OnDisable()
     {
-        if (enemy != null) { enemy.LayerChanged -= OnLayerChanged; enemy.Defeated -= OnDefeated; }
-        if (siphon != null) siphon.ChargeStolen -= FlashAbsorption;
+        if (enemy != null)
+        {
+            enemy.LayerChanged -= OnLayerChanged;
+            enemy.Defeated -= OnDefeated;
+        }
+
+        if (siphon != null)
+        {
+            siphon.AbsorptionPulse -= OnAbsorptionPulse;
+        }
     }
 }

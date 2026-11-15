@@ -34,8 +34,8 @@ Transform:
   m_GameObject: {fileID: 2023493600845295901}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 1.19, z: 4.39}
-  m_LocalScale: {x: 1.5, y: 1.5, z: 1.5}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 2263694549909836325}
@@ -169,6 +169,7 @@ MonoBehaviour:
   windup: 0.35
   chargeDuration: 0.5
   contactRadius: 1.4
+  safeStopDistance: 1.3
 --- !u!195 &6963508157320009222
 NavMeshAgent:
   m_ObjectHideFlags: 0
@@ -188,7 +189,7 @@ NavMeshAgent:
   m_AutoBraking: 1
   m_AutoRepath: 1
   m_Height: 1
-  m_BaseOffset: 0.5
+  m_BaseOffset: 0
   m_WalkableMask: 4294967295
   m_ObstacleAvoidanceType: 4
 --- !u!114 &848173704729544658
@@ -208,6 +209,10 @@ MonoBehaviour:
   detectionDistance: 7
   returnDistance: 11
   patrolArrivalDistance: 1
+  seekResources: 1
+  sourceStopDistance: 2.2
+  patrolSeconds: 8
+  seekSeconds: 20
 --- !u!114 &9118163621828064838
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -226,6 +231,8 @@ MonoBehaviour:
   persistentVoidAuraPrefab: {fileID: 4771941083535878408, guid: c38eef389e81ce146afa76f9dff5d6d5, type: 3}
   defeatBurstPrefab: {fileID: 4720837536442339838, guid: cf27b5a48b6859e4da14bee2da65e760, type: 3}
   burstLifetime: 3
+  flashSeconds: 0.5
+  flashes: 2
 --- !u!114 &1174556997757527901
 MonoBehaviour:
   m_ObjectHideFlags: 0

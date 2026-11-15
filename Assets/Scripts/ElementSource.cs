@@ -20,6 +20,11 @@ public class ElementSource : MonoBehaviour
 
     public int RemainingCharges { get; private set; }
     public bool IsDepleted => RemainingCharges <= 0;
+    public bool IsAvailable =>
+    isActiveAndEnabled &&
+    !IsDepleted &&
+    weatherAvailable &&
+    grantsElement != null;
 
     Collider trigger;
     Renderer[] visuals;
