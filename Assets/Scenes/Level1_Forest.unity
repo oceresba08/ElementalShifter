@@ -3375,6 +3375,9 @@ MonoBehaviour:
   hitDamage: 17
   spinDamage: 12
   slamDamage: 26
+  hitStaggerSeconds: 1.5
+  spinStaggerSeconds: 2.5
+  slamStaggerSeconds: 4
   skillDamage: 25
   ultimateDamage: 58
   skillCooldown: 5
@@ -3619,7 +3622,7 @@ MonoBehaviour:
   onlyDuring: 3
   extinguishedByRainOrSnow: 1
   renderersToHide: []
-  startingCharges: 3
+  startingCharges: 1
   absorbCooldown: 0.8
   countsForWrath: 1
 --- !u!65 &1719398753
@@ -4252,11 +4255,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1174556997757527901, guid: cc06c317728dd874881773b8e0b4f1c1, type: 3}
       propertyPath: secondsPerCharge
-      value: 40
+      value: 5
       objectReference: {fileID: 0}
     - target: {fileID: 2023493600845295901, guid: cc06c317728dd874881773b8e0b4f1c1, type: 3}
       propertyPath: m_Name
       value: ElementalVoid
+      objectReference: {fileID: 0}
+    - target: {fileID: 5377762073346461870, guid: cc06c317728dd874881773b8e0b4f1c1, type: 3}
+      propertyPath: m_IsActive
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 5531416265357135935, guid: cc06c317728dd874881773b8e0b4f1c1, type: 3}
       propertyPath: player
@@ -4318,6 +4325,22 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 8259517474859968502, guid: cc06c317728dd874881773b8e0b4f1c1, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: -2.21
+      objectReference: {fileID: 0}
+    - target: {fileID: 8259517474859968502, guid: cc06c317728dd874881773b8e0b4f1c1, type: 3}
+      propertyPath: m_AnchoredPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8966488437602491620, guid: cc06c317728dd874881773b8e0b4f1c1, type: 3}
+      propertyPath: enemy
+      value: 
+      objectReference: {fileID: 5996121614464962249}
+    - target: {fileID: 8966488437602491620, guid: cc06c317728dd874881773b8e0b4f1c1, type: 3}
+      propertyPath: siphon
+      value: 
+      objectReference: {fileID: 5996121614464962244}
     - target: {fileID: 9118163621828064838, guid: cc06c317728dd874881773b8e0b4f1c1, type: 3}
       propertyPath: flashes
       value: 3
@@ -4339,6 +4362,28 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: cc06c317728dd874881773b8e0b4f1c1, type: 3}
+--- !u!114 &5996121614464962244 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 1174556997757527901, guid: cc06c317728dd874881773b8e0b4f1c1, type: 3}
+  m_PrefabInstance: {fileID: 5996121614464962242}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c9759591543f71149bb9f2e799d6c1f0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ElementalVoidSiphon
+--- !u!114 &5996121614464962249 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 1604092758695930631, guid: cc06c317728dd874881773b8e0b4f1c1, type: 3}
+  m_PrefabInstance: {fileID: 5996121614464962242}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: feeb8d4884b2b5048a075aa829dd88e0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::EnemyLayers
 --- !u!1001 &6680484615805610062
 PrefabInstance:
   m_ObjectHideFlags: 0

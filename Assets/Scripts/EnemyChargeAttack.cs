@@ -240,7 +240,7 @@ public class EnemyChargeAttack : MonoBehaviour
 
         float interruptionEnd =
             siphon != null
-            ? Time.time + siphon.interruptionSeconds
+            ? Time.time + siphon.InterruptionRemaining
             : Time.time;
 
         nextAttack = Mathf.Max(
