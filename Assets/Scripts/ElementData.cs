@@ -2,7 +2,7 @@ using UnityEngine;
 public enum ElementFamily { None, Fire, Water, Nature, Earth, Wind, Lightning, Ice }
 public enum ElementId { Fire, Water, Nature, Earth, Wind, Paper, Mud, Steam, Bloom, Lightning, Ice }
 public enum ElementClass { Assassin, Fighter, Heavy, Ranger, Healer, Trickster, Tank, Mage, Support, Burst, Controller }
-[CreateAssetMenu(menuName = "Elemental Shift/Element", fileName = "NewElement")]
+[CreateAssetMenu(menuName = "Elemental Rumble/Element", fileName = "NewElement")]
 public class ElementData : ScriptableObject
 {
     public ElementId id;
@@ -19,4 +19,7 @@ public class ElementData : ScriptableObject
     public Material appearanceMaterial;
     public GameObject visualPrefab;
     public GameObject loopingAuraPrefab;
+
+    [Header("Transformation burst (one shot)")]
+    public GameObject transformationBurstPrefab;
 }

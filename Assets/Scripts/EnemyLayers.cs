@@ -1,66 +1,171 @@
+
 using System;
 using System.Collections;
 using UnityEngine;
+
 public class EnemyLayers : MonoBehaviour
 {
     [Header("Outermost layer first")]
     public ElementData[] layers;
     public bool randomizeOnStart = true;
     public ElementData[] allowedRandomElements;
+
     [Range(1, 5)] public int randomMinLayers = 1;
     [Range(1, 5)] public int randomMaxLayers = 3;
+
     [Header("Stats")]
     public float defaultHealthPerLayer = 35f;
     public Renderer bodyRenderer;
     public float extraSizePerLayer = .2f;
     public float wetFireLayerSeconds = 3f;
+
     public event Action<EnemyLayers> LayerChanged;
     public event Action<EnemyLayers> Defeated;
-    public int RemainingLayers => layers == null ? 0 : Mathf.Max(0, layers.Length - currentIndex);
-    public ElementData CurrentLayer => RemainingLayers > 0 ? layers[currentIndex] : null;
-    public float HealthFraction => Mathf.Clamp01(health / Mathf.Max(1f, layerMaxHealth));
+
+    public int RemainingLayers =>
+        layers == null ? 0 :
+        Mathf.Max(0, layers.Length - currentIndex);
+
+    public ElementData CurrentLayer =>
+        RemainingLayers > 0 ? layers[currentIndex] : null;
+
+    public float HealthFraction =>
+        Mathf.Clamp01(health / Mathf.Max(1f, layerMaxHealth));
+
     public float CurrentHealth => health;
     public float CurrentMaxHealth => layerMaxHealth;
+
     int currentIndex;
     float health, layerMaxHealth;
     Vector3 initialScale;
     Coroutine rainRoutine;
     bool defeated;
+
     void Start()
     {
         initialScale = transform.localScale;
-        if (randomizeOnStart && allowedRandomElements != null && allowedRandomElements.Length > 0)
+
+        if (randomizeOnStart &&
+            allowedRandomElements != null &&
+            allowedRandomElements.Length > 0)
         {
             int min = Mathf.Clamp(randomMinLayers, 1, 5);
             int max = Mathf.Clamp(randomMaxLayers, min, 5);
-            layers = new ElementData[UnityEngine.Random.Range(min, max + 1)];
+
+            layers = new ElementData[
+                UnityEngine.Random.Range(min, max + 1)
+            ];
+
             for (int i = 0; i < layers.Length; i++)
-                layers[i] = allowedRandomElements[UnityEngine.Random.Range(0, allowedRandomElements.Length)];
+            {
+                layers[i] = allowedRandomElements[
+                    UnityEngine.Random.Range(
+                        0, allowedRandomElements.Length)
+                ];
+            }
         }
-        if (layers == null || layers.Length == 0 || layers[0] == null)
-        { Debug.LogWarning("Configure layers or allowedRandomElements", this); enabled = false; return; }
-        transform.localScale = initialScale * (1f + extraSizePerLayer * (layers.Length - 1));
+
+        if (layers == null ||
+            layers.Length == 0 ||
+            layers[0] == null)
+        {
+            Debug.LogWarning(
+                "Configure layers or allowedRandomElements",
+                this
+            );
+            enabled = false;
+            return;
+        }
+
+        transform.localScale =
+            initialScale *
+            (1f + extraSizePerLayer * (layers.Length - 1));
+
         RefreshLayer();
+
         if (WeatherManager.Instance != null)
         {
-            WeatherManager.Instance.WeatherChanged += OnWeatherChanged;
-            OnWeatherChanged(WeatherManager.Instance.Current);
+            WeatherManager.Instance.WeatherChanged +=
+                OnWeatherChanged;
+
+            OnWeatherChanged(
+                WeatherManager.Instance.Current
+            );
         }
     }
-    public bool TakeHit(float damage, ElementData attacker, bool isElemental)
+
+    public bool TakeHit(
+        float damage,
+        ElementData attacker,
+        bool isElemental)
     {
-        if (defeated || CurrentLayer == null) return false;
-        float matchup = ElementMatchups.Advantage(attacker, CurrentLayer);
+        if (defeated || CurrentLayer == null)
+            return false;
+
+        float matchup =
+            ElementMatchups.Advantage(attacker, CurrentLayer);
+
         float weight = isElemental ? .85f : .35f;
-        float power = attacker != null ? attacker.attackMultiplier : 1f;
-        health -= damage * Mathf.Lerp(1f, matchup, weight) * power;
-        if (health <= 0) AdvanceLayer(); else LayerChanged?.Invoke(this);
+
+        float power = attacker != null
+            ? attacker.attackMultiplier
+            : 1f;
+
+        health -= damage *
+            Mathf.Lerp(1f, matchup, weight) *
+            power;
+
+        if (health <= 0)
+            AdvanceLayer();
+        else
+            LayerChanged?.Invoke(this);
+
         return true;
     }
+
+    // Adds the newly stolen element as the outermost layer.
+    public bool TryAddOuterLayer(
+        ElementData element,
+        int maximumLayers)
+    {
+        if (defeated ||
+            element == null ||
+            CurrentLayer == null)
+            return false;
+
+        if (RemainingLayers >=
+            Mathf.Max(1, maximumLayers))
+            return false;
+
+        ElementData[] updated =
+            new ElementData[RemainingLayers + 1];
+
+        updated[0] = element;
+
+        for (int i = 0; i < RemainingLayers; i++)
+        {
+            updated[i + 1] = layers[currentIndex + i];
+        }
+
+        layers = updated;
+        currentIndex = 0;
+
+        transform.localScale =
+            initialScale *
+            (1f + extraSizePerLayer * (layers.Length - 1));
+
+        RefreshLayer();
+
+        return true;
+    }
+
     void AdvanceLayer()
     {
-        if (defeated) return;
+        if (defeated)
+            return;
+
         currentIndex++;
+
         if (RemainingLayers <= 0)
         {
             defeated = true;
@@ -68,34 +173,72 @@ public class EnemyLayers : MonoBehaviour
             Destroy(gameObject);
             return;
         }
+
         RefreshLayer();
     }
+
     void RefreshLayer()
     {
-        layerMaxHealth = CurrentLayer != null ? CurrentLayer.enemyLayerHealth : defaultHealthPerLayer;
-        layerMaxHealth = Mathf.Max(1f, layerMaxHealth);
+        layerMaxHealth = CurrentLayer != null
+            ? CurrentLayer.enemyLayerHealth
+            : defaultHealthPerLayer;
+
+        layerMaxHealth =
+            Mathf.Max(1f, layerMaxHealth);
+
         health = layerMaxHealth;
-        if (bodyRenderer != null && CurrentLayer != null && CurrentLayer.appearanceMaterial != null)
-            bodyRenderer.sharedMaterial = CurrentLayer.appearanceMaterial;
+
+        if (bodyRenderer != null &&
+            CurrentLayer != null &&
+            CurrentLayer.appearanceMaterial != null)
+        {
+            bodyRenderer.sharedMaterial =
+                CurrentLayer.appearanceMaterial;
+        }
+
         LayerChanged?.Invoke(this);
     }
+
     void OnWeatherChanged(WeatherType w)
     {
-        if (rainRoutine != null) StopCoroutine(rainRoutine);
+        if (rainRoutine != null)
+            StopCoroutine(rainRoutine);
+
         rainRoutine = null;
-        if (w == WeatherType.Rain || w == WeatherType.Snow || w == WeatherType.Storm)
-            rainRoutine = StartCoroutine(WetFireReaction());
+
+        if (w == WeatherType.Rain ||
+            w == WeatherType.Snow ||
+            w == WeatherType.Storm)
+        {
+            rainRoutine = StartCoroutine(
+                WetFireReaction()
+            );
+        }
     }
+
     IEnumerator WetFireReaction()
     {
         while (!defeated)
         {
-            yield return new WaitForSeconds(wetFireLayerSeconds);
-            if (CurrentLayer == null || CurrentLayer.primaryFamily != ElementFamily.Fire) break;
+            yield return new WaitForSeconds(
+                wetFireLayerSeconds
+            );
+
+            if (CurrentLayer == null ||
+                CurrentLayer.primaryFamily !=
+                ElementFamily.Fire)
+                break;
+
             AdvanceLayer();
         }
+
         rainRoutine = null;
     }
+
     void OnDestroy()
-    { if (WeatherManager.Instance != null) WeatherManager.Instance.WeatherChanged -= OnWeatherChanged; }
+    {
+        if (WeatherManager.Instance != null)
+            WeatherManager.Instance.WeatherChanged -=
+                OnWeatherChanged;
+    }
 }

@@ -25,4 +25,5 @@ MonoBehaviour:
   description: 
   appearanceMaterial: {fileID: 2100000, guid: 114d07a7c0013ca48b3d7ab0702cc33b, type: 2}
   visualPrefab: {fileID: 0}
-  loopingAuraPrefab: {fileID: 0}
+  loopingAuraPrefab: {fileID: 6695027298847020031, guid: 34e58a103a32f964f99251ce84b13fb4, type: 3}
+  transformationBurstPrefab: {fileID: 3684601555311758092, guid: 465deadf28748e64684fd59ed9438b1a, type: 3}

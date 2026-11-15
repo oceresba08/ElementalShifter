@@ -21,6 +21,9 @@ public class PlayerElements : MonoBehaviour
     private GameObject activeAura;
     private GameObject activeVisual;
 
+    [Header("Transformation burst settings")]
+    [Min(0.1f)] public float transformationBurstLifetime = 3f;
+
     private void Start()
     {
         ShiftingEnabled = shiftingEnabledAtStart;
@@ -64,6 +67,8 @@ public class PlayerElements : MonoBehaviour
     public void ApplyElement(ElementData next)
     {
         if (next == null) return;
+        // Touching a source of the same element should not replay the burst.
+        bool changedForm = Current == null || Current.id != next.id;
         Current = next;
         if (activeVisual != null) Destroy(activeVisual);
         bool usesCustomMesh = next.visualPrefab != null;
@@ -85,6 +90,14 @@ public class PlayerElements : MonoBehaviour
         if (next.loopingAuraPrefab != null)
             activeAura = Instantiate(next.loopingAuraPrefab,
                 effectsAnchor != null ? effectsAnchor : transform);
+
+        // The burst is intentionally NOT parented to the rolling ball.
+        if (changedForm && next.transformationBurstPrefab != null)
+        {
+            Vector3 position = effectsAnchor != null ? effectsAnchor.position : transform.position;
+            GameObject burst = Instantiate(next.transformationBurstPrefab, position, Quaternion.identity);
+            Destroy(burst, transformationBurstLifetime);
+        }
 
         PlayerPrefs.SetInt("ElementUnlocked_" + next.id, 1);
         PlayerPrefs.Save();
