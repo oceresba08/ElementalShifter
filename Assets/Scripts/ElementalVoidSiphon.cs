@@ -18,6 +18,18 @@ public class ElementalVoidSiphon : MonoBehaviour
     [Min(0f)] public float playerSafeDistance = 5f;
     public Transform player;
 
+
+    [Header("Absorption Interruption")]
+    [Min(0f)] public float interruptionSeconds = 3f;
+
+    private float interruptedUntil;
+
+    public bool IsInterrupted =>
+        Time.time < interruptedUntil;
+
+    public event Action AbsorptionInterrupted;
+
+
     [Header("Optional Status")]
     public TMPro.TMP_Text statusText;
 
@@ -38,10 +50,13 @@ public class ElementalVoidSiphon : MonoBehaviour
     public ElementData TargetElement => pendingElement;
     public int StoredCharges => storedCharges;
 
+
     public bool CanSeekResource =>
         layers != null &&
         layers.CurrentLayer != null &&
-        layers.RemainingLayers < maximumLayers;
+        layers.RemainingLayers < maximumLayers &&
+        !IsInterrupted;
+
 
     public bool IsSeeking => isSeeking;
 
@@ -83,6 +98,42 @@ public class ElementalVoidSiphon : MonoBehaviour
         }
     }
 
+
+
+    public void InterruptAbsorption()
+    {
+        if (layers == null || layers.CurrentLayer == null)
+            return;
+
+        // Interrupt even if the Void has just switched
+        // from absorbing to chasing the player.
+        interruptedUntil = Mathf.Max(
+            interruptedUntil,
+            Time.time + interruptionSeconds
+        );
+
+        // Reset unfinished progress toward the next charge.
+        // Keep storedCharges and pendingElement unchanged.
+        nextDrain = interruptedUntil + secondsPerCharge;
+
+        target = null;
+        isSeeking = false;
+        nextScan = 0f;
+
+        AbsorptionPulse?.Invoke(null, 0f);
+        AbsorptionInterrupted?.Invoke();
+
+        SetStatus("DISRUPTED!");
+
+        Debug.Log(
+            name + " was interrupted until " +
+            interruptedUntil,
+            this
+        );
+    }
+
+
+
     private void Update()
     {
         if (!CanSeekResource)
@@ -97,6 +148,15 @@ public class ElementalVoidSiphon : MonoBehaviour
             AbsorptionPulse?.Invoke(null, 0f);
             return;
         }
+
+
+        if (IsInterrupted)
+        {
+            AbsorptionPulse?.Invoke(null, 0f);
+            SetStatus("DISRUPTED");
+            return;
+        }
+
 
         FindPlayerIfNeeded();
 

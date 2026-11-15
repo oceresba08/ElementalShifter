@@ -102,6 +102,17 @@ public class EnemyLayers : MonoBehaviour
         if (defeated || CurrentLayer == null)
             return false;
 
+
+        if (damage > 0f)
+        {
+            ElementalVoidSiphon siphon =
+                GetComponent<ElementalVoidSiphon>();
+
+            if (siphon != null)
+                siphon.InterruptAbsorption();
+        }
+
+
         float matchup =
             ElementMatchups.Advantage(attacker, CurrentLayer);
 

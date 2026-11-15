@@ -52,14 +52,34 @@ public class EnemyPatrol : MonoBehaviour
         {
             siphon.SetSeeking(false);
             siphon.ChargeStolen += OnChargeStolen;
+            siphon.AbsorptionInterrupted += OnAbsorptionInterrupted;
         }
     }
+
+
+    void OnAbsorptionInterrupted()
+    {
+        ChangeActivity(Activity.Patrol);
+
+        if (agent != null &&
+            agent.enabled &&
+            agent.isOnNavMesh)
+        {
+            agent.isStopped = true;
+            agent.ResetPath();
+        }
+    }
+
 
     void OnDestroy()
     {
         if (siphon != null)
+        {
             siphon.ChargeStolen -= OnChargeStolen;
+            siphon.AbsorptionInterrupted -= OnAbsorptionInterrupted;
+        }
     }
+
 
     void OnChargeStolen(ElementData element)
     {
@@ -84,6 +104,15 @@ public class EnemyPatrol : MonoBehaviour
     {
         if (!agent.enabled || !agent.isOnNavMesh)
             return;
+
+
+        if (siphon != null && siphon.IsInterrupted)
+        {
+            agent.isStopped = true;
+            agent.ResetPath();
+            return;
+        }
+
 
         if (player == null)
         {

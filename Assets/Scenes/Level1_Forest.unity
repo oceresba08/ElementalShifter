@@ -2453,6 +2453,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::LevelVictory
   victoryPanel: {fileID: 340364622}
   checkEverySeconds: 0.5
+--- !u!4 &1152264700 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 6588834180106705634, guid: cc06c317728dd874881773b8e0b4f1c1, type: 3}
+  m_PrefabInstance: {fileID: 5996121614464962242}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1172483667
 GameObject:
   m_ObjectHideFlags: 0
@@ -4247,7 +4252,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1174556997757527901, guid: cc06c317728dd874881773b8e0b4f1c1, type: 3}
       propertyPath: secondsPerCharge
-      value: 4
+      value: 40
       objectReference: {fileID: 0}
     - target: {fileID: 2023493600845295901, guid: cc06c317728dd874881773b8e0b4f1c1, type: 3}
       propertyPath: m_Name
@@ -4257,6 +4262,14 @@ PrefabInstance:
       propertyPath: player
       value: 
       objectReference: {fileID: 1714861631}
+    - target: {fileID: 5531416265357135935, guid: cc06c317728dd874881773b8e0b4f1c1, type: 3}
+      propertyPath: visualRoot
+      value: 
+      objectReference: {fileID: 1152264700}
+    - target: {fileID: 5531416265357135935, guid: cc06c317728dd874881773b8e0b4f1c1, type: 3}
+      propertyPath: disruptionBurstPrefab
+      value: 
+      objectReference: {fileID: 2190530202626910473, guid: 9d78e77a38cd2cb49a0e212980c5a768, type: 3}
     - target: {fileID: 6963508157320009222, guid: cc06c317728dd874881773b8e0b4f1c1, type: 3}
       propertyPath: m_BaseOffset
       value: 0
@@ -4326,6 +4339,63 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: cc06c317728dd874881773b8e0b4f1c1, type: 3}
+--- !u!1001 &6680484615805610062
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: 2190530202626910473, guid: 9d78e77a38cd2cb49a0e212980c5a768, type: 3}
+      propertyPath: m_Name
+      value: VoidDisruptionBurst
+      objectReference: {fileID: 0}
+    - target: {fileID: 8600230208477576498, guid: 9d78e77a38cd2cb49a0e212980c5a768, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0.00001
+      objectReference: {fileID: 0}
+    - target: {fileID: 8600230208477576498, guid: 9d78e77a38cd2cb49a0e212980c5a768, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8600230208477576498, guid: 9d78e77a38cd2cb49a0e212980c5a768, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8600230208477576498, guid: 9d78e77a38cd2cb49a0e212980c5a768, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 8600230208477576498, guid: 9d78e77a38cd2cb49a0e212980c5a768, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8600230208477576498, guid: 9d78e77a38cd2cb49a0e212980c5a768, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8600230208477576498, guid: 9d78e77a38cd2cb49a0e212980c5a768, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8600230208477576498, guid: 9d78e77a38cd2cb49a0e212980c5a768, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8600230208477576498, guid: 9d78e77a38cd2cb49a0e212980c5a768, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8600230208477576498, guid: 9d78e77a38cd2cb49a0e212980c5a768, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 9d78e77a38cd2cb49a0e212980c5a768, type: 3}
 --- !u!1001 &7105044591327225605
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -4406,3 +4476,4 @@ SceneRoots:
   - {fileID: 1846949912}
   - {fileID: 2141092350}
   - {fileID: 1515047791}
+  - {fileID: 6680484615805610062}
