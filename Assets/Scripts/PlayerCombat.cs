@@ -10,6 +10,10 @@ public class PlayerCombat : MonoBehaviour
     public OrbitCombatCamera combatCamera;
     [Header("Physical attacks")]
     public float hitDamage = 17f, spinDamage = 12f, slamDamage = 26f;
+    [Header("Phase 8: Attack Stagger Durations")]
+    [Min(0f)] public float hitStaggerSeconds = 1.5f;
+    [Min(0f)] public float spinStaggerSeconds = 2.5f;
+    [Min(0f)] public float slamStaggerSeconds = 4f;
     [Header("Elemental attacks")]
     public float skillDamage = 25f, ultimateDamage = 58f;
     public float skillCooldown = 5f, hitCooldown = .65f, spinCooldown = 1.3f, slamCooldown = 2.5f;
@@ -131,7 +135,7 @@ public class PlayerCombat : MonoBehaviour
             if (!connected)
             {
                 Vector3 center = transform.position + direction * 1f;
-                connected = Strike(center, collisionDamageRadius, hitDamage, false, direction);
+                connected = Strike(center, collisionDamageRadius, hitDamage, false, direction, hitStaggerSeconds);
                 if (connected) { combatCamera?.Shake(.2f, .15f); break; }
             }
             yield return new WaitForFixedUpdate();
@@ -168,7 +172,7 @@ public class PlayerCombat : MonoBehaviour
             elapsed += Time.fixedDeltaTime;
             if (rb.linearVelocity.y <= 0.1f && SlamGrounded()) break;
         }
-        Strike(transform.position, 2.7f, slamDamage, false);
+        Strike(transform.position, 2.7f, slamDamage, false, null, slamStaggerSeconds);
         if (slamImpactVFX != null) Destroy(Instantiate(slamImpactVFX, transform.position + Vector3.down * .4f, Quaternion.identity), 3f);
         combatCamera?.EndSlamFollow();
         AttackFeedback?.Invoke("SMASH!");
@@ -209,7 +213,7 @@ public class PlayerCombat : MonoBehaviour
             if (!struck && t >= .46f)
             {
                 struck = true;
-                if (Strike(impact + forward * .95f, spinHitRadius, spinDamage, false, forward))
+                if (Strike(impact + forward * .95f, spinHitRadius, spinDamage, false, forward, spinStaggerSeconds))
                     combatCamera?.Shake(.07f, .09f);
             }
         }
@@ -324,14 +328,14 @@ public class PlayerCombat : MonoBehaviour
         Vector3 v = combatCamera != null ? combatCamera.transform.forward : transform.forward;
         v.y = 0; return v.sqrMagnitude > .001f ? v.normalized : Vector3.forward;
     }
-    bool Strike(Vector3 center, float radius, float damage, bool elemental, Vector3? shoveDirection = null)
+    bool Strike(Vector3 center, float radius, float damage, bool elemental, Vector3? shoveDirection = null, float staggerSeconds = -1f)
     {
         bool any = false;
         HashSet<EnemyLayers> seen = new HashSet<EnemyLayers>();
         foreach (Collider c in Physics.OverlapSphere(center, radius))
         {
             EnemyLayers enemy = c.GetComponentInParent<EnemyLayers>();
-            if (enemy == null || !seen.Add(enemy) || !enemy.TakeHit(damage, elements != null ? elements.Current : null, elemental)) continue;
+            if (enemy == null || !seen.Add(enemy) || !enemy.TakeHit(damage, elements != null ? elements.Current : null, elemental, staggerSeconds)) continue;
             any = true;
             UltimateCharge = Mathf.Min(100, UltimateCharge + (elemental ? 10 : 8));
             Rigidbody targetBody = enemy.GetComponent<Rigidbody>();

@@ -27,6 +27,10 @@ public class ElementalVoidSiphon : MonoBehaviour
     public bool IsInterrupted =>
         Time.time < interruptedUntil;
 
+    // Used by charge-attack recovery so long Slam staggers are respected.
+    public float InterruptionRemaining =>
+        Mathf.Max(0f, interruptedUntil - Time.time);
+
     public event Action AbsorptionInterrupted;
 
 
@@ -100,7 +104,11 @@ public class ElementalVoidSiphon : MonoBehaviour
 
 
 
-    public void InterruptAbsorption()
+    // Existing calls remain valid and use the Inspector default.
+    public void InterruptAbsorption() => InterruptAbsorption(interruptionSeconds);
+
+    // Phase 8: override the duration for Hit, Spin or Slam.
+    public void InterruptAbsorption(float duration)
     {
         if (layers == null || layers.CurrentLayer == null)
             return;
@@ -109,7 +117,7 @@ public class ElementalVoidSiphon : MonoBehaviour
         // from absorbing to chasing the player.
         interruptedUntil = Mathf.Max(
             interruptedUntil,
-            Time.time + interruptionSeconds
+            Time.time + Mathf.Max(0f, duration)
         );
 
         // Reset unfinished progress toward the next charge.
@@ -136,24 +144,24 @@ public class ElementalVoidSiphon : MonoBehaviour
 
     private void Update()
     {
-        if (!CanSeekResource)
+        if (layers == null || layers.CurrentLayer == null ||
+            layers.RemainingLayers >= maximumLayers)
         {
             StopAbsorbing();
             SetStatus("MAX LAYERS");
             return;
         }
 
-        if (!isSeeking)
-        {
-            AbsorptionPulse?.Invoke(null, 0f);
-            return;
-        }
-
-
         if (IsInterrupted)
         {
             AbsorptionPulse?.Invoke(null, 0f);
-            SetStatus("DISRUPTED");
+            SetStatus("DISRUPTED!");
+            return;
+        }
+
+        if (!isSeeking)
+        {
+            AbsorptionPulse?.Invoke(null, 0f);
             return;
         }
 
