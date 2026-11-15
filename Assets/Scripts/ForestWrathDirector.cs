@@ -62,6 +62,9 @@ public class ForestWrathDirector : MonoBehaviour
     private Coroutine warningRoutine;
     private float nextEnemyCheck;
     private bool foundEnemiesAtStart;
+    private bool warnedTwoMinutes;
+    private bool warnedThirtySeconds;
+    private bool warnedFinalMinute;
 
     private void Start()
     {
@@ -108,8 +111,26 @@ public class ForestWrathDirector : MonoBehaviour
             if (source != null && source.IsDepleted)
                 RegisterDepletion(source);
 
+        // One-time clock warnings. Avoid overwriting the Wrath announcement.
+        if (!warnedTwoMinutes && SecondsRemaining <= 120f &&
+            levelSeconds > 120f)
+        {
+            warnedTwoMinutes = true;
+            if (!WrathActive) ShowWarning("TWO MINUTES REMAIN!", 2f);
+        }
+
         if (!WrathActive && SecondsRemaining <= wrathAtSecondsRemaining)
+        {
+            warnedFinalMinute = true;
             BeginWrath();
+        }
+
+        if (!warnedThirtySeconds && SecondsRemaining <= 30f)
+        {
+            warnedThirtySeconds = true;
+            if (WrathActive) ShowWarning("30 SECONDS! SURVIVE DEMETER'S WRATH!", 3f);
+            else ShowWarning("30 SECONDS REMAIN!", 3f);
+        }
 
         if (SecondsRemaining <= 0f)
         {
@@ -165,9 +186,9 @@ public class ForestWrathDirector : MonoBehaviour
 
         // Counts For Wrath affects the EARLY wrath trigger only.
         // All sources still contribute to the total-resource-loss rule.
-        if (source.countsForWrath && source.grantsElement != null &&
-            (source.grantsElement.primaryFamily == ElementFamily.Nature ||
-             source.grantsElement.primaryFamily == ElementFamily.Earth))
+        if (source.countsForWrath && (source.DefaultElement ?? source.grantsElement) != null &&
+            ((source.DefaultElement ?? source.grantsElement).primaryFamily == ElementFamily.Nature ||
+             (source.DefaultElement ?? source.grantsElement).primaryFamily == ElementFamily.Earth))
         {
             NatureEarthDepleted++;
             if (!WrathActive && NatureEarthDepleted >= natureOrEarthDepletionThreshold)
