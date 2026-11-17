@@ -25,7 +25,7 @@ public class EnemyChargeAttack : MonoBehaviour
     public float recoilSquash = 0.85f;
     public float recoveryAttackDelay = 0.7f;
 
-    [Header("Handmade Particle Effects")]
+    [Header("Particle Effects")]
     public GameObject disruptionBurstPrefab;
     public Transform effectsAnchor;
     public float effectLifetime = 3f;

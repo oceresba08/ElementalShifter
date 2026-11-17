@@ -7,10 +7,12 @@ using UnityEngine.InputSystem;
 public class PlayerCombat : MonoBehaviour
 {
     public PlayerElements elements;
+    [Header("Elemental Abilities")]
+    public ElementalAbilityController elementalAbilities;
     public OrbitCombatCamera combatCamera;
     [Header("Physical attacks")]
     public float hitDamage = 17f, spinDamage = 12f, slamDamage = 26f;
-    [Header("Phase 8: Attack Stagger Durations")]
+    [Header("Attack Stagger Durations")]
     [Min(0f)] public float hitStaggerSeconds = 1.5f;
     [Min(0f)] public float spinStaggerSeconds = 2.5f;
     [Min(0f)] public float slamStaggerSeconds = 4f;
@@ -31,7 +33,7 @@ public class PlayerCombat : MonoBehaviour
     public float spinTurnSpeed = 24f;
     public float spinHitRadius = 1.65f;
     public TrailRenderer spinTrail;
-    [Header("Phase 3 elemental skills")]
+    [Header("elemental skills")]
     public ElementProjectile windProjectilePrefab;
     public float projectileSpeed = 18f;
     public float earthWindupSeconds = 0.4f;
@@ -79,27 +81,30 @@ public class PlayerCombat : MonoBehaviour
         return false;
     }
     void Awake()
-    { rb = GetComponent<Rigidbody>(); if (elements == null) elements = GetComponent<PlayerElements>(); }
+    { rb = GetComponent<Rigidbody>(); if (elements == null) elements = GetComponent<PlayerElements>(); if (elementalAbilities == null) elementalAbilities = GetComponent<ElementalAbilityController>(); }
     void Update()
     {
-        if (elements != null && elements.Current != null && elements.Current.combatClass == ElementClass.Healer && Time.time >= nextNatureRegen)
+        if (elementalAbilities == null && elements != null && elements.Current != null && elements.Current.combatClass == ElementClass.Healer && Time.time >= nextNatureRegen)
         {
             nextNatureRegen = Time.time + 1f;
             GetComponent<PlayerDurability>()?.Heal(natureHealPerSecond);
         }
         if (Keyboard.current == null || Time.timeScale == 0) return;
-        if (Keyboard.current.jKey.wasPressedThisFrame && Time.time >= nextHit && !busy)
+        if (Keyboard.current.jKey.wasPressedThisFrame && Time.time >= nextHit && !busy && (elementalAbilities == null || !elementalAbilities.IsCasting))
         { nextHit = Time.time + hitCooldown; StartCoroutine(LungeHit()); }
-        if (Keyboard.current.kKey.wasPressedThisFrame && Time.time >= nextSpin && !busy)
+        if (Keyboard.current.kKey.wasPressedThisFrame && Time.time >= nextSpin && !busy && (elementalAbilities == null || !elementalAbilities.IsCasting))
         { nextSpin = Time.time + spinCooldown; StartCoroutine(CurvedSpin()); }
-        if (Keyboard.current.lKey.wasPressedThisFrame && Time.time >= nextSlam && !busy)
+        if (Keyboard.current.lKey.wasPressedThisFrame && Time.time >= nextSlam && !busy && (elementalAbilities == null || !elementalAbilities.IsCasting))
         { nextSlam = Time.time + slamCooldown; StartCoroutine(Slam()); }
-        if (Keyboard.current.qKey.wasPressedThisFrame && Time.time >= nextSkill && !busy && elements != null && elements.Current != null)
-        { nextSkill = Time.time + skillCooldown; UseSkill(); }
-        if (Keyboard.current.rKey.wasPressedThisFrame && UltimateCharge >= 100f && !busy && elements != null && elements.Current != null)
+        if (Keyboard.current.qKey.wasPressedThisFrame && !busy && elements != null && elements.Current != null)
         {
-            UltimateCharge = 0;
-            StartCoroutine(UseUltimate());
+            if (elementalAbilities != null) elementalAbilities.TryUseSkill();
+            else if (Time.time >= nextSkill) { nextSkill = Time.time + skillCooldown; UseSkill(); }
+        }
+        if (Keyboard.current.rKey.wasPressedThisFrame && !busy && elements != null && elements.Current != null)
+        {
+            if (elementalAbilities != null) elementalAbilities.TryUseUltimate();
+            else if (UltimateCharge >= 100f) { UltimateCharge = 0f; StartCoroutine(UseUltimate()); }
         }
     }
     EnemyLayers NearestEnemy(float range)
@@ -320,6 +325,12 @@ public class PlayerCombat : MonoBehaviour
     {
         if (effect == null) return;
         Destroy(Instantiate(effect, pos, Quaternion.identity), 4f);
+    }
+    public bool TrySpendUltimateCharge(float amount)
+    {
+        if (UltimateCharge < amount) return false;
+        UltimateCharge = Mathf.Max(0f, UltimateCharge - amount);
+        return true;
     }
     public void AddUltimateCharge(float value)
     { UltimateCharge = Mathf.Clamp(UltimateCharge + value, 0f, 100f); }

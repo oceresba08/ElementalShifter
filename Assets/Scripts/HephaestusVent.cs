@@ -11,7 +11,7 @@ public class HephaestusVent : MonoBehaviour
     [Min(0.1f)] public float radius = 2.6f;
     public float damage = 12f;
     public float push = 7f;
-    [Header("Handmade VFX")]
+    [Header("VFX")]
     public GameObject warningPrefab;
     public GameObject eruptionPrefab;
     public float vfxLifetime = 4f;

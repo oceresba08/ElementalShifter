@@ -15,7 +15,7 @@ public class DemeterFlower : MonoBehaviour
     public float damage = 8f;
     public LayerMask affectedLayers = ~0;
 
-    [Header("Handmade VFX")]
+    [Header("VFX")]
     public GameObject warningVFX;
     public GameObject burstVFX;
     [Min(0.1f)] public float effectsLifetime = 4f;

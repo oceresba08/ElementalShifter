@@ -13,7 +13,7 @@ public class PoseidonWave : MonoBehaviour
     public float hitDepth = 1.2f;
     public float damage = 10f;
     public float knockback = 9f;
-    [Header("Handmade VFX")]
+    [Header("VFX")]
     public GameObject warningPrefab;
     public GameObject waveVisualPrefab;
     public float effectLifetime = 4f;

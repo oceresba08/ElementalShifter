@@ -107,7 +107,7 @@ public class ElementalVoidSiphon : MonoBehaviour
     // Existing calls remain valid and use the Inspector default.
     public void InterruptAbsorption() => InterruptAbsorption(interruptionSeconds);
 
-    // Phase 8: override the duration for Hit, Spin or Slam.
+    //  override the duration for Hit, Spin or Slam.
     public void InterruptAbsorption(float duration)
     {
         if (layers == null || layers.CurrentLayer == null)
