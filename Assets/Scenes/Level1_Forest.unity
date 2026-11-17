@@ -24581,7 +24581,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: deea0f6ab8487ca468ce99827ad606db, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ElementalAbilityController
-  balanceOverrides: []
+  balanceOverrides:
+  - element: 0
+    skillDamageMultiplier: 2
+    ultimateDamageMultiplier: 1
+    skillCooldownOverride: 0
+    skillHealMultiplier: 1
+    ultimateHealMultiplier: 1
+    passiveHealMultiplier: 1
+    skillHealHPOverride: -1
+    ultimateHealHPOverride: -1
+    passiveHealHPPerSecondOverride: -1
   elements: {fileID: 1714861626}
   combat: {fileID: 1714861624}
   effectsAnchor: {fileID: 1291455507}

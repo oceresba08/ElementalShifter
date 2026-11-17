@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
 
-// Q and R abilities; J/K/L remain in PlayerCombat.
+// Phase 10: Q and R abilities; J/K/L remain in PlayerCombat.
 // Particle effects are user-authored prefabs, never procedurally created here.
 [RequireComponent(typeof(PlayerCombat))]
 public class ElementalAbilityController : MonoBehaviour
@@ -23,10 +23,43 @@ public class ElementalAbilityController : MonoBehaviour
         [Min(0.1f)] public float skillDamageMultiplier = 1f;
         [Min(0.1f)] public float ultimateDamageMultiplier = 1f;
         [Min(0f)] public float skillCooldownOverride = 0f; // 0 means use default
+        [Min(0f)] public float skillHealMultiplier = 1f;
+        [Min(0f)] public float ultimateHealMultiplier = 1f;
+        [Min(0f)] public float passiveHealMultiplier = 1f;
+
+        [Tooltip("-1 = use this move's original healing; 0 = no healing; any positive number = exact HP healed by Q.")]
+        public float skillHealHPOverride = -1f;
+        [Tooltip("-1 = use original healing; 0 = no healing; positive = HP per ultimate healing pulse.")]
+        public float ultimateHealHPOverride = -1f;
+        [Tooltip("-1 = use original passive healing; 0 = no passive healing; positive = HP healed per second while eligible.")]
+        public float passiveHealHPPerSecondOverride = -1f;
     }
 
-    [Header("Per-element balance")]
+    [Header("Per-element balance (expand each element)")]
+    [Tooltip("Each entry has separate damage, cooldown, skill healing, ultimate healing and passive healing settings.")]
     public BalanceOverride[] balanceOverrides;
+
+    // Run from the component's three-dot menu in the Inspector.
+    // This adds missing entries without overwriting existing balance entries.
+    [ContextMenu("Create Missing Element Balance Entries")]
+    private void CreateMissingElementBalanceEntries()
+    {
+        var list = balanceOverrides != null
+            ? new List<BalanceOverride>(balanceOverrides)
+            : new List<BalanceOverride>();
+        foreach (ElementId id in System.Enum.GetValues(typeof(ElementId)))
+        {
+            if (list.Exists(x => x != null && x.element == id)) continue;
+            list.Add(new BalanceOverride { element = id });
+        }
+        balanceOverrides = list.ToArray();
+#if UNITY_EDITOR
+        if (!Application.isPlaying)
+            UnityEditor.EditorUtility.SetDirty(this);
+#endif
+    }
+
+    private void Reset() => CreateMissingElementBalanceEntries();
 
     [Header("References")]
     public PlayerElements elements;
@@ -34,7 +67,7 @@ public class ElementalAbilityController : MonoBehaviour
     public Transform effectsAnchor;
     public ElementProjectile projectilePrefab;
 
-    [Header("VFX")]
+    [Header("Handmade VFX (optional)")]
     public AbilityEffects[] effects;
     public float effectLifetime = 4f;
 
@@ -65,6 +98,44 @@ public class ElementalAbilityController : MonoBehaviour
         return 1f;
     }
 
+    // Set these independently for each ElementId in the Balance Overrides array.
+    // Healing multipliers scale healing already present in an ability.
+    private float HealMultiplier(ElementId id, bool ultimate, bool passive = false)
+    {
+        if (balanceOverrides != null)
+            foreach (BalanceOverride setting in balanceOverrides)
+                if (setting != null && setting.element == id)
+                    return passive ? setting.passiveHealMultiplier :
+                        ultimate ? setting.ultimateHealMultiplier : setting.skillHealMultiplier;
+        return 1f;
+    }
+
+    private BalanceOverride BalanceFor(ElementId id)
+    {
+        if (balanceOverrides == null) return null;
+        foreach (BalanceOverride entry in balanceOverrides)
+            if (entry != null && entry.element == id) return entry;
+        return null;
+    }
+
+    private float HealAmount(ElementId id, bool ultimate, float originalAmount)
+    {
+        BalanceOverride b = BalanceFor(id);
+        if (b == null) return originalAmount;
+        float exact = ultimate ? b.ultimateHealHPOverride : b.skillHealHPOverride;
+        float amount = exact >= 0f ? exact : originalAmount;
+        return amount * HealMultiplier(id, ultimate);
+    }
+
+    private float PassiveHealAmount(ElementId id, float originalPerSecond)
+    {
+        BalanceOverride b = BalanceFor(id);
+        if (b == null) return originalPerSecond;
+        float amount = b.passiveHealHPPerSecondOverride >= 0f
+            ? b.passiveHealHPPerSecondOverride : originalPerSecond;
+        return amount * b.passiveHealMultiplier;
+    }
+
     private readonly Dictionary<ElementId, float> cooldownEnds = new Dictionary<ElementId, float>();
     private float nextPassiveTick;
     private bool casting;
@@ -93,10 +164,10 @@ public class ElementalAbilityController : MonoBehaviour
         PlayerDurability hp = GetComponent<PlayerDurability>();
         if (hp == null) return;
         if (CurrentId == ElementId.Nature || CurrentId == ElementId.Bloom)
-            hp.Heal(natureHealPerSecond);
+            hp.Heal(PassiveHealAmount(CurrentId, natureHealPerSecond));
         else if (CurrentId == ElementId.Water && WeatherManager.Instance != null &&
                  (WeatherManager.Instance.Current == WeatherType.Rain || WeatherManager.Instance.Current == WeatherType.Storm))
-            hp.Heal(waterHealPerSecondInRain);
+            hp.Heal(PassiveHealAmount(CurrentId, waterHealPerSecondInRain));
     }
 
     // Optional modifier read by BallMotor. All other ElementData multipliers still apply.
@@ -152,7 +223,7 @@ public class ElementalAbilityController : MonoBehaviour
                 break;
             case ElementId.Water: // Restorative jet
                 Message("RESTORATIVE JET");
-                Heal(11f);
+                Heal(11f, id, false);
                 DamageCone(5.5f, 0.48f, SkillDamage * 0.85f, element, 1f);
                 break;
             case ElementId.Earth: // Ground shatter
@@ -162,7 +233,7 @@ public class ElementalAbilityController : MonoBehaviour
                 break;
             case ElementId.Nature: // Heal & roots
                 Message("ROOT RENEWAL");
-                Heal(16f);
+                Heal(16f, id, false);
                 DamageNear(transform.position, 2.6f, SkillDamage * 0.55f, element, 2.5f);
                 break;
             case ElementId.Wind: // Air cutter
@@ -185,7 +256,7 @@ public class ElementalAbilityController : MonoBehaviour
                 break;
             case ElementId.Bloom: // Bloom burst: healing + damage
                 Message("BLOOM BURST");
-                Heal(14f);
+                Heal(14f, id, false);
                 DamageNear(transform.position, 3.3f, SkillDamage * 0.75f, element, 2f);
                 break;
             case ElementId.Lightning: // Chain zap
@@ -210,11 +281,11 @@ public class ElementalAbilityController : MonoBehaviour
                 yield return Pulses(element, 4, .35f, 5f, UltimateDamage * .31f, 2f);
                 break;
             case ElementId.Water:
-                Message("TIDAL REGENESIS"); Heal(30f);
+                Message("TIDAL REGENESIS"); Heal(30f, id, true);
                 yield return Pulses(element, 3, .5f, 5.7f, UltimateDamage * .28f, 2.2f);
                 break;
             case ElementId.Earth:
-                Message("TITAN QUAKE"); Heal(12f);
+                Message("TITAN QUAKE"); Heal(12f, id, true);
                 yield return new WaitForSeconds(.4f);
                 DamageNear(transform.position, 6.3f, UltimateDamage, element, 4f);
                 break;
@@ -222,7 +293,7 @@ public class ElementalAbilityController : MonoBehaviour
                 Message("LIVING SANCTUARY");
                 for (int i = 0; i < 5; i++)
                 {
-                    Heal(8f); DamageNear(transform.position, 4f, UltimateDamage * .12f, element, 1.5f);
+                    Heal(8f, id, true); DamageNear(transform.position, 4f, UltimateDamage * .12f, element, 1.5f);
                     yield return new WaitForSeconds(.55f);
                 }
                 break;
@@ -246,7 +317,7 @@ public class ElementalAbilityController : MonoBehaviour
                 DamageNear(transform.position, 6f, UltimateDamage * 1.1f, element, 3f);
                 break;
             case ElementId.Bloom:
-                Message("SPRING AWAKENING"); Heal(38f);
+                Message("SPRING AWAKENING"); Heal(38f, id, true);
                 yield return Pulses(element, 4, .45f, 5f, UltimateDamage * .20f, 2.2f);
                 break;
             case ElementId.Lightning:
@@ -341,7 +412,12 @@ public class ElementalAbilityController : MonoBehaviour
         projectile.Initialize(combat, e, direction, projectileSpeed, damage, 2.5f);
     }
 
-    private void Heal(float amount) => GetComponent<PlayerDurability>()?.Heal(amount);
+    private void Heal(float amount, ElementId id, bool ultimate)
+    {
+        float adjustedAmount = HealAmount(id, ultimate, amount);
+        if (adjustedAmount > 0f)
+            GetComponent<PlayerDurability>()?.Heal(adjustedAmount);
+    }
 
     private Vector3 FlatForward()
     {
