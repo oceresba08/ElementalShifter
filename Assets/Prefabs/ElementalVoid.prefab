@@ -137,6 +137,37 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
+--- !u!1 &792864815406635536
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 6151888870017851380}
+  m_Layer: 0
+  m_Name: ElementAuraMount
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &6151888870017851380
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 792864815406635536}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 6588834180106705634}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &818317754368620606
 GameObject:
   m_ObjectHideFlags: 0
@@ -342,6 +373,8 @@ Transform:
   - {fileID: 2263694549909836325}
   - {fileID: 6866641936957774753}
   - {fileID: 3818860138790223534}
+  - {fileID: 5553615311299028908}
+  - {fileID: 6151888870017851380}
   m_Father: {fileID: 7241754727012269085}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &2023493600845295901
@@ -362,6 +395,7 @@ GameObject:
   - component: {fileID: 848173704729544658}
   - component: {fileID: 9118163621828064838}
   - component: {fileID: 1174556997757527901}
+  - component: {fileID: 8679053270909304563}
   m_Layer: 0
   m_Name: ElementalVoid
   m_TagString: Untagged
@@ -608,6 +642,33 @@ MonoBehaviour:
   player: {fileID: 0}
   interruptionSeconds: 3
   statusText: {fileID: 0}
+--- !u!114 &8679053270909304563
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2023493600845295901}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ce1e3aacd40b2c94cb84541969d951e1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ElementalVoidWeatherVisuals
+  enemyLayers: {fileID: 1604092758695930631}
+  agent: {fileID: 6963508157320009222}
+  visualMount: {fileID: 5553615311299028908}
+  auraMount: {fileID: 6151888870017851380}
+  elementShellRenderer: {fileID: 6730101340269506972}
+  mudElement: {fileID: 11400000, guid: 9f59a4c563611664b9aeb03afa723d3a, type: 2}
+  iceElement: {fileID: 11400000, guid: 36505a14e64aae04b9b021c0400cfe53, type: 2}
+  useElementVisualPrefabs: 1
+  useElementAuras: 1
+  visualScale: 1
+  keepOriginalShell: 1
+  fireWetSpeedMultiplier: 0.7
+  mudSpeedMultiplier: 0.8
+  iceSpeedMultiplier: 0.85
+  printChanges: 0
 --- !u!1 &2479488740335875964
 GameObject:
   m_ObjectHideFlags: 0
@@ -1001,6 +1062,37 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!1 &3676348238682586662
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 5553615311299028908}
+  m_Layer: 0
+  m_Name: ElementModelMount
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &5553615311299028908
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3676348238682586662}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 6588834180106705634}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &3683711314870045017
 GameObject:
   m_ObjectHideFlags: 0

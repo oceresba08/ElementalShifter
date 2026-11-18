@@ -262,8 +262,20 @@ public class ElementSource : MonoBehaviour
 
     private void TryCollectFromPlayer(Collider other)
     {
+
         PlayerElements player = other.GetComponentInParent<PlayerElements>();
         if (player == null) return;
+
+
+        ElementData equipped = player.Current;
+
+        if (equipped != null && grantsElement != null &&
+            (equipped == grantsElement ||
+             equipped.id == grantsElement.id))
+        {
+            return;
+        }
+
 
         if (!IsAvailable)
         {
