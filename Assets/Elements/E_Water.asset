@@ -24,6 +24,6 @@ MonoBehaviour:
   ultimateName: Tidal Wave
   description: 
   appearanceMaterial: {fileID: 2100000, guid: cf9f4be8851e3dc4f9afb2677799eefe, type: 2}
-  visualPrefab: {fileID: 0}
+  visualPrefab: {fileID: 4556080398112364038, guid: 0cce23524b809304493409cc4a5af83f, type: 3}
   loopingAuraPrefab: {fileID: 1711266260059967955, guid: def30101a8ee54448948b5abe656a1e5, type: 3}
   transformationBurstPrefab: {fileID: 8472048290931191260, guid: 774246c2f79d63847b7b0335e2fcf3b8, type: 3}

@@ -24,6 +24,6 @@ MonoBehaviour:
   ultimateName: Landslide
   description: 
   appearanceMaterial: {fileID: 2100000, guid: 29f4b406bb03f544b8e0a982dd467d26, type: 2}
-  visualPrefab: {fileID: 0}
+  visualPrefab: {fileID: 5131845805227045904, guid: 721b94fe9026c00418a7f8353cf638a7, type: 3}
   loopingAuraPrefab: {fileID: 7497707205144360921, guid: 00cd4e1cdcac4a84fbee39fe870dac55, type: 3}
   transformationBurstPrefab: {fileID: 6615065176403441681, guid: a98ea0403d431814d93ffe3dde209be7, type: 3}

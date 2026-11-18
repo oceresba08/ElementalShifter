@@ -24,6 +24,6 @@ MonoBehaviour:
   ultimateName: Shred
   description: 
   appearanceMaterial: {fileID: 2100000, guid: 9915ec721373d554f80e06d0f831796e, type: 2}
-  visualPrefab: {fileID: 0}
+  visualPrefab: {fileID: 384566481454971336, guid: a0b7f748fa5997641b691a1a07b8b2a1, type: 3}
   loopingAuraPrefab: {fileID: 5639811934698462302, guid: 934489ffb2a0e7b46a7886f614cf9aae, type: 3}
   transformationBurstPrefab: {fileID: 6541958245301673454, guid: 40e4e7f97f824874db50c04c9a4a11d0, type: 3}

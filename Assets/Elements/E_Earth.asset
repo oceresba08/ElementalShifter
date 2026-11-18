@@ -24,6 +24,6 @@ MonoBehaviour:
   ultimateName: Earthquake
   description: 
   appearanceMaterial: {fileID: 2100000, guid: e12521fd304a2e344a586892d10c1fc7, type: 2}
-  visualPrefab: {fileID: 0}
+  visualPrefab: {fileID: 5363363878092437671, guid: 8c6ab35b8de5e6443bc0287481028f9a, type: 3}
   loopingAuraPrefab: {fileID: 8814562242714176905, guid: 40d7393bb844853479b17ee71cb6f088, type: 3}
   transformationBurstPrefab: {fileID: 8266640764509029696, guid: c5f578e2ffaf7ae4d9c3e2757a688509, type: 3}

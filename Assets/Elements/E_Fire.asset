@@ -24,6 +24,6 @@ MonoBehaviour:
   ultimateName: Inferno
   description: 
   appearanceMaterial: {fileID: 2100000, guid: 9d73882d3d131a848b85b1a0a4a3380d, type: 2}
-  visualPrefab: {fileID: 0}
+  visualPrefab: {fileID: 1651241938864671087, guid: 46cd500f1cb226347ab545fd71059968, type: 3}
   loopingAuraPrefab: {fileID: 9174021880318085337, guid: 6315d4eaa1a58714f86105fcbdcd75c1, type: 3}
   transformationBurstPrefab: {fileID: 4831021074652751443, guid: 7f26431d4c025f84fbec7a98ced869e9, type: 3}
