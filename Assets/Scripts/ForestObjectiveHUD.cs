@@ -7,14 +7,16 @@ using TMPro;
 /// </summary>
 public class ForestObjectiveHUD : MonoBehaviour
 {
-    public TMP_Text objectiveText;
+    public TMP_Text voidObjectiveText;
+    public TMP_Text sourceObjectiveText;
+
     public float refreshSeconds = 0.3f;
 
     private float nextRefresh;
 
     private void Update()
     {
-        if (objectiveText == null ||
+        if (voidObjectiveText == null ||
             Time.time < nextRefresh)
             return;
 
@@ -37,8 +39,10 @@ public class ForestObjectiveHUD : MonoBehaviour
                 available++;
         }
 
-        objectiveText.text =
-            "VOIDS REMAINING: " + enemies +
-            "\nSOURCES REMAINING: " + available;
+        voidObjectiveText.text =
+            "Voids Remaining: " + enemies;
+
+        sourceObjectiveText.text = 
+              "Sources Remaining: " + available;
     }
 }
