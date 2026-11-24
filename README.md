@@ -1,2 +1,3 @@
 # ElementalShifter
-
+Final Project Introduction
+ElementalShifter is a 3D action game in which players control a rolling sphere that absorbs environmental elements, transforming into those elements with unique abilities. Players can harness fire, water, earth, and more, and even combine certain elements to unlock more powerful fusions. Throughout the game, players battle evolving Void enemies that absorb elements to strengthen their power and destroy the world. Dynamic weather conditions affect elemental abilities and availability, forcing players to think more strategically. Across three mythologically inspired levels, players must defeat enemies, manage limited elemental resources, and survive environmental hazards controlled by Greek gods.
